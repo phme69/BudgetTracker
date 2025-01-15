@@ -3,30 +3,56 @@ import { useNavigate, Link, useLocation } from "react-router-dom";
 import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const Header = () => {
-    const [dropdownVisible, setDropdownVisible] = useState(false);
-    const dropdownRef = useRef(null);
+    const [signInDropdownVisible, setSignInDropdownVisible] = useState(false);
+    const [joinNowDropdownVisible, setJoinNowDropdownVisible] = useState(false);
+
+    const signInDropdownRef = useRef(null);
+    const joinNowDropdownRef = useRef(null);
 
     const navigate = useNavigate();
     const [isJoining, setIsJoining] = useState(false);
+
+    const location = useLocation();
+    const isSignUpPage = location.pathname.startsWith("/signup");
+
     const handleJoinNow = () => {
         setIsJoining(true);
         navigate("/signup");
     };
 
-    const location = useLocation();
-    const isSignUpPage = location.pathname.startsWith("/signup");
+    const handleSignUpCustomer = () => {
+        navigate("/signup-customer");
+        setJoinNowDropdownVisible(false);
+    };
 
-    const toggleDropdown = () => {
-        setDropdownVisible(!dropdownVisible);
+    const handleSignUpSeller = () => {
+        navigate("/signup-seller");
+        setJoinNowDropdownVisible(false);
+    };
+
+    const toggleSignInDropdown = () => {
+        setSignInDropdownVisible((prev) => !prev);
+        setJoinNowDropdownVisible(false); // Close Join Now dropdown if open
+    };
+
+    const toggleJoinNowDropdown = () => {
+        setJoinNowDropdownVisible((prev) => !prev);
+        setSignInDropdownVisible(false); // Close Sign In dropdown if open
     };
 
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
-                dropdownRef.current &&
-                !dropdownRef.current.contains(event.target)
+                signInDropdownRef.current &&
+                !signInDropdownRef.current.contains(event.target)
             ) {
-                setDropdownVisible(false);
+                setSignInDropdownVisible(false);
+            }
+            if (
+                joinNowDropdownRef.current &&
+                !joinNowDropdownRef.current.contains(event.target)
+            ) {
+                setJoinNowDropdownVisible(false);
             }
         };
         document.addEventListener("mousedown", handleClickOutside);
@@ -38,13 +64,14 @@ const Header = () => {
     return (
         <header className="bg-[#79D7BE] text-black shadow-lg">
             <div className="container mx-auto px-6 py-5 flex justify-between items-center space-x-4">
-                <h1 className="text-2xl font-bold tracking-wide ml-20 ">
-                    BUDGET TRACKER                   
+                <h1 className="text-2xl font-bold tracking-wide ml-20">
+                    BUDGET TRACKER
                 </h1>
                 <nav className="flex items-center space-x-6">
                     <Link
                         to="/"
-                        className="hover:text-white text-xl transition-all duration-300">
+                        className="hover:text-white text-xl transition-all duration-300"
+                    >
                         HOME
                     </Link>
                 </nav>
@@ -55,52 +82,81 @@ const Header = () => {
                             href="https://discord.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-black hover:text-white transition-all duration-300">
+                            className="text-black hover:text-white transition-all duration-300"
+                        >
                             <i className="fab fa-discord text-xl"></i>
                         </a>
                         <a
                             href="https://twitter.com"
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="text-black hover:text-white transition-all duration-300">
+                            className="text-black hover:text-white transition-all duration-300"
+                        >
                             <i className="fab fa-twitter text-xl"></i>
                         </a>
                     </div>
-                    <div className="relative" ref={dropdownRef}>
+
+                    {/* Sign In Dropdown */}
+                    <div className="relative" ref={signInDropdownRef}>
                         <button
-                            onClick={toggleDropdown}
-                            className="bg-white text-black px-4 py-2 rounded-full hover:bg-[#66C1A9] hover:ring-2 hover:ring-[#66C1A9] transition-all duration-300">
+                            onClick={toggleSignInDropdown}
+                            className="bg-white text-black px-4 py-2 rounded-full hover:bg-[#66C1A9] hover:ring-2 hover:ring-[#66C1A9] transition-all duration-300"
+                        >
                             Sign In
                         </button>
-                        {dropdownVisible && (
+                        {signInDropdownVisible && (
                             <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-300 rounded-lg shadow-lg">
                                 <Link
                                     to="/signin-customer"
-                                    className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300">
+                                    className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300"
+                                >
                                     Sign In as Customer
                                 </Link>
                                 <Link
                                     to="/signin-seller"
-                                    className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300">
+                                    className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300"
+                                >
                                     Sign In as Seller
                                 </Link>
                                 <Link
                                     to="/signin-parvez"
-                                    className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300">
+                                    className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300"
+                                >
                                     Sign In as Parvez
                                 </Link>
                             </div>
                         )}
                     </div>
-                    <button
-                        onClick={handleJoinNow}
-                        className={`px-6 py-2 rounded-full text-white transition-all duration-300 ${
-                            isSignUpPage
-                                ? "bg-[#66C1A9] hover:bg-[#55A895]"
-                                : "bg-[#5CA89E] hover:bg-[#4E9B91]"
-                        }`}>
-                        {isSignUpPage ? "Account Sign Up Ongoing" : "Join Now"}
-                    </button>
+
+                    {/* Join Now Dropdown */}
+                    <div className="relative" ref={joinNowDropdownRef}>
+                        <button
+                            onClick={toggleJoinNowDropdown}
+                            className={`px-6 py-2 rounded-full text-white transition-all duration-300 ${
+                                isSignUpPage
+                                    ? "bg-[#66C1A9] hover:bg-[#55A895]"
+                                    : "bg-[#5CA89E] hover:bg-[#4E9B91]"
+                            }`}
+                        >
+                            {isSignUpPage ? "Account Sign Up Ongoing" : "Join Now"}
+                        </button>
+                        {joinNowDropdownVisible && (
+                            <div className="absolute right-0 mt-3 w-56 bg-white border border-gray-300 rounded-lg shadow-lg">
+                                <button
+                                    onClick={handleSignUpCustomer}
+                                    className="block w-full text-left px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300"
+                                >
+                                    Sign Up as Customer
+                                </button>
+                                <button
+                                    onClick={handleSignUpSeller}
+                                    className="block w-full text-left px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300"
+                                >
+                                    Sign Up as Seller
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
         </header>

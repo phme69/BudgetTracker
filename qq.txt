@@ -1,0 +1,2 @@
+INSERT INTO `products` (`product_id`, `category`, `title`, `price`, `stock_quantity`, `brand`, `max_discountable_price`, `description`, `image_url`) 
+VALUES ('3500', 'Cat_Name', 'Dairy', '500', '50', 'DESHI', '450', 'Hello this is the description', 'projectimages\\dairy.jpg')

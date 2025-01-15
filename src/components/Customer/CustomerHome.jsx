@@ -2,13 +2,17 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import CustomerSideBar from "./CustomerSideBar";
 
+import { Carousel } from "react-responsive-carousel";
+import "react-responsive-carousel/lib/styles/carousel.min.css";
+
 const CustomerHome = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
     const location = useLocation();
     const locationState = location.state || {};
-    const { customerID: locationcustomerID, name: locationcustomerName } = locationState;
+    const { customerID: locationcustomerID, name: locationcustomerName } =
+        locationState;
 
     useEffect(() => {
         if (locationcustomerID && locationcustomerName) {
@@ -34,7 +38,9 @@ const CustomerHome = () => {
                         <h1 className="text-4xl font-extrabold mb-6 text-gray-800 animate-fadeInDown">
                             Welcome, {customerName}
                         </h1>
-                        <p className="text-gray-600">Customer ID: {customerID}</p>
+                        <p className="text-gray-600">
+                            Customer ID: {customerID}
+                        </p>
                     </div>
                     <CustomerHomeOffers />
                 </div>
@@ -44,42 +50,97 @@ const CustomerHome = () => {
 };
 
 const CustomerHomeOffers = () => {
-  return (
-      <div className="p-8  min-h-screen">
-          <div className="grid grid-cols-3 gap-8">
-              {/* News & Updates Section */}
-              <div className="col-span-2">
-                  <h2 className="text-2xl font-bold mb-4 text-gray-800">News & Updates</h2>
-                  <div className="bg-gradient-to-r from-pink-500 to-red-500 rounded-lg h-48 flex items-center justify-center shadow-xl transform transition-transform hover:scale-105 hover:shadow-2xl">
-                      <span className="text-white text-3xl font-bold animate-pulse">Image Here</span>
-                  </div>
-              </div>
-              {/* Sponsor Section */}
-              <div className="flex items-center justify-center mt-8 w-full">
-                  <div className="bg-white rounded-lg p-8 flex items-center w-full justify-center flex-col shadow-xl transform transition-transform hover:scale-105 hover:shadow-2xl">
-                      <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full w-20 h-20 flex items-center justify-center animate-bounce">
-                          <span className="text-white text-3xl font-bold">$</span>
-                      </div>
-                      <p className="text-xl font-bold mt-4 text-gray-700">SPONSOR</p>
-                  </div>
-              </div>
-          </div>
+    return (
+        <div className="min-h-screen">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 py-8 w-full">
+                {/* News & Updates Section */}
+                <div className="col-span-1 p-6 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200 w-full">
+                    <h2 className="text-3xl font-extrabold mb-6 text-gray-900 tracking-wide border-b-4 border-indigo-500 inline-block">
+                        News & Updates
+                    </h2>
+                    <Carousel
+                        showThumbs={false}
+                        showStatus={false}
+                        infiniteLoop
+                        autoPlay
+                        interval={3000}
+                        className="rounded-xl overflow-hidden shadow-md transition-all duration-300"
+                    >
+                        <div>
+                            <img
+                                src="projectimages/news/n1.jpeg"
+                                alt="News 1"
+                                className="h-96 w-full object-cover"
+                            />
+                        </div>
+                        <div>
+                            <img
+                                src="projectimages/news/news2.jpg"
+                                alt="News 2"
+                                className="h-96 w-full object-cover"
+                            />
+                        </div>
+                        <div>
+                            <img
+                                src="projectimages/news/news3.jpg"
+                                alt="News 3"
+                                className="h-96 w-full object-cover"
+                            />
+                        </div>
+                    </Carousel>
+                </div>
 
-          <h2 className="text-2xl font-bold mt-12 mb-4 text-gray-800">Special Offers & Discount</h2>
-          <div className="grid grid-cols-3 gap-4">
-              {["Offer 1", "Offer 2", "Offer 3"].map((offer, index) => (
-                  <div
-                      key={index}
-                      className={`bg-gradient-to-r ${
-                          index % 2 === 0 ? "from-blue-500 to-teal-500" : "from-yellow-500 to-orange-500"
-                      } rounded-lg h-48 flex items-center justify-center shadow-xl transform transition-transform hover:scale-105 hover:shadow-2xl`}
-                  >
-                      <span className={`text-white text-3xl font-bold`}>{offer}</span>
-                  </div>
-              ))}
-          </div>
-      </div>
-  );
+                {/* Sponsor Section */}
+                <div className="col-span-1 p-6 bg-white rounded-2xl shadow-lg hover:shadow-2xl transition-shadow duration-300 border border-gray-200">
+                    <h2 className="text-3xl font-extrabold mb-6 text-gray-900 tracking-wide border-b-4 border-green-500 inline-block">
+                        Sponsor
+                    </h2>
+                    <Carousel
+                        showThumbs={false}
+                        showStatus={false}
+                        infiniteLoop
+                        autoPlay
+                        interval={3000}
+                        className="rounded-xl overflow-hidden shadow-md transition-all duration-300"
+                    >
+                        <div>
+                            <img
+                                src="projectimages/news/ads2.jpg"
+                                alt="Sponsor 2"
+                                className="h-96 w-full object-cover"
+                            />
+                        </div>
+                        <div>
+                            <img
+                                src="projectimages/news/ads3.jpg"
+                                alt="Sponsor 3"
+                                className="h-96 w-full object-cover"
+                            />
+                        </div>
+                    </Carousel>
+                </div>
+            </div>
+
+            <h2 className="text-2xl font-bold mt-12 mb-4 text-gray-800">
+                Special Offers & Discount
+            </h2>
+            <div className="grid grid-cols-3 gap-4">
+                {["Offer 1", "Offer 2", "Offer 3"].map((offer, index) => (
+                    <div
+                        key={index}
+                        className={`bg-gradient-to-r ${
+                            index % 2 === 0
+                                ? "from-blue-500 to-teal-500"
+                                : "from-yellow-500 to-orange-500"
+                        } rounded-lg h-48 flex items-center justify-center shadow-xl transform transition-transform hover:scale-105 hover:shadow-2xl`}>
+                        <span className={`text-white text-3xl font-bold`}>
+                            {offer}
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 };
 
 export default CustomerHome;

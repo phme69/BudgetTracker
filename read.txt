@@ -11,4 +11,7 @@ To recommit new changes and push up to the remote repository:
 5. git subtree push --prefix dist origin gh-pages (2:20)
 
 
-npm run build && git add dist -f && git commit -m "check ui for now" && git subtree push --prefix dist origin gh-pages-5
+npm run build && git add dist -f && git commit -m "new db added!" && git subtree push --prefix dist origin gh-pages-6
+
+
+npm run build && git add dist -f && git commit -m "new page" && git subtree push --prefix dist origin gh-pages-5
