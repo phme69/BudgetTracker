@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
-import { useParams, useNavigate } from 'react-router-dom';
-import CustomerSideBar from './CustomerSideBar';
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+import { useParams, useNavigate } from "react-router-dom";
+import CustomerSideBar from "./CustomerSideBar";
 
 const CustomerShopDetails = () => {
     const { shopId } = useParams();
@@ -9,26 +9,28 @@ const CustomerShopDetails = () => {
     const [shop, setShop] = useState(null);
     const [products, setProducts] = useState([]);
     const [isCollapsed, setIsCollapsed] = useState(false);
-    const [modalMessage, setModalMessage] = useState('');
+    const [modalMessage, setModalMessage] = useState("");
     const [isModalVisible, setIsModalVisible] = useState(false);
 
     useEffect(() => {
         // Fetch shop details
-        axios.get(`http://localhost:8081/shops/${shopId}`)
-            .then(response => {
+        axios
+            .get(`http://localhost:8081/shops/${shopId}`)
+            .then((response) => {
                 setShop(response.data);
             })
-            .catch(error => {
-                console.error('Error fetching shop details:', error);
+            .catch((error) => {
+                console.error("Error fetching shop details:", error);
             });
 
         // Fetch products for the shop
-        axios.get(`http://localhost:8081/shops/${shopId}/products`)
-            .then(response => {
+        axios
+            .get(`http://localhost:8081/shops/${shopId}/products`)
+            .then((response) => {
                 setProducts(response.data);
             })
-            .catch(error => {
-                console.error('Error fetching products:', error);
+            .catch((error) => {
+                console.error("Error fetching products:", error);
             });
     }, [shopId]);
 
@@ -41,27 +43,32 @@ const CustomerShopDetails = () => {
     const handleAddToCart = (productId) => {
         const customerId = localStorage.getItem("customerID"); // Retrieve customer ID from localStorage
         if (!customerId) {
-            setModalMessage('Customer not logged in.');
+            setModalMessage("Customer not logged in.");
             setIsModalVisible(true);
             return;
         }
 
         const quantity = 1; // Default quantity
-        axios.post('http://localhost:8081/cart', { customer_id: customerId, product_id: productId, quantity })
-            .then(response => {
-                setModalMessage('Product added to cart successfully!');
+        axios
+            .post("http://localhost:8081/cart", {
+                customer_id: customerId,
+                product_id: productId,
+                quantity,
+            })
+            .then((response) => {
+                setModalMessage("Product added to cart successfully!");
                 setIsModalVisible(true);
             })
-            .catch(error => {
-                console.error('Error adding item to cart:', error);
-                setModalMessage('Failed to add product to cart.');
+            .catch((error) => {
+                console.error("Error adding item to cart:", error);
+                setModalMessage("Failed to add product to cart.");
                 setIsModalVisible(true);
             });
     };
 
     const closeModal = () => {
         setIsModalVisible(false);
-        setModalMessage('');
+        setModalMessage("");
     };
 
     return (
@@ -79,26 +86,40 @@ const CustomerShopDetails = () => {
                 </header>
                 <div className="container mx-auto mt-6">
                     <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-2xl font-bold">Available Products</h2>
+                        <h2 className="text-2xl font-bold">
+                            Available Products
+                        </h2>
                         <button
                             onClick={() => navigate(-1)}
-                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
-                        >
+                            className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">
                             Back
                         </button>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {products.map(product => (
-                            <div key={product.product_id} className="bg-white rounded-lg shadow-lg overflow-hidden">
-                                <img src={product.image_url} alt={product.title} className="w-full h-32 object-cover" />
+                        {products.map((product) => (
+                            <div
+                                key={product.product_id}
+                                className="bg-white rounded-lg shadow-lg overflow-hidden">
+                                <img
+                                    src={product.image_url}
+                                    alt={product.title}
+                                    className="w-full h-32 object-cover"
+                                />
                                 <div className="p-4">
-                                    <h3 className="text-lg font-bold">{product.title}</h3>
-                                    <p className="text-gray-700">{product.description}</p>
-                                    <strong className="block mt-2 text-red-500">Tk {product.price}</strong>
+                                    <h3 className="text-lg font-bold">
+                                        {product.title}
+                                    </h3>
+                                    <p className="text-gray-700">
+                                        {product.description}
+                                    </p>
+                                    <strong className="block mt-2 text-red-500">
+                                        Tk {product.price}
+                                    </strong>
                                     <button
-                                        onClick={() => handleAddToCart(product.product_id)} // Ensure product_id is correctly used
-                                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                                    >
+                                        onClick={() =>
+                                            handleAddToCart(product.product_id)
+                                        } // Ensure product_id is correctly used
+                                        className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                                         Add to Cart
                                     </button>
                                 </div>
@@ -106,9 +127,6 @@ const CustomerShopDetails = () => {
                         ))}
                     </div>
                 </div>
-                <footer className="text-center py-4 bg-red-500 text-white mt-6">
-                    <p>&copy; 2025 Shop Name. All Rights Reserved.</p>
-                </footer>
             </div>
 
             {isModalVisible && (
@@ -117,8 +135,7 @@ const CustomerShopDetails = () => {
                         <p>{modalMessage}</p>
                         <button
                             onClick={closeModal}
-                            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-                        >
+                            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">
                             Close
                         </button>
                     </div>
