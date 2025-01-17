@@ -50,6 +50,8 @@ const CDueHome = () => {
                         amount: payment.Amount,
                         date: payment.due_date,
                         paymentStatus: payment.payment_status,
+                        paymentReason: payment.payment_reason,
+                        partialPayment: payment.partial_payment_amount,
                     });
                     return acc;
                 }, {});
@@ -108,6 +110,12 @@ const CDueHome = () => {
                                 <th className="border px-4 py-2 bg-blue-600 text-white">
                                     Status
                                 </th>
+                                <th className="border px-4 py-2 bg-blue-600 text-white">
+                                    Partial Payment
+                                </th>
+                                <th className="border px-4 py-2 bg-blue-600 text-white">
+                                    Reason
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -124,11 +132,20 @@ const CDueHome = () => {
                                     </td>
                                     <td
                                         className={`border px-4 py-2 ${
-                                            due.paymentStatus === "Paid"
+                                            due.paymentStatus === "paid"
                                                 ? "text-green-500"
+                                                : due.paymentStatus ===
+                                                  "partial"
+                                                ? "text-yellow-500"
                                                 : "text-red-500"
                                         }`}>
                                         {due.paymentStatus}
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                        {due.partialPayment} BDT
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                        {due.paymentReason || "N/A"}
                                     </td>
                                 </tr>
                             ))}

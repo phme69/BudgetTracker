@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import SellerNavbar from "./SellerNavbar";
-import SellerFooter from "./SellerFooter";
-import SellerSideBar from "./SellerSideBar.jsx";
+import CustomerNavbar from "./CustomerNavbar";
+import CustomerFooter from "./CustomerFooter";
+import CustomerSideBar from "./CustomerSideBar.jsx";
 
-const SellerMessages = () => {
+const CustomerMessages = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
 
@@ -15,15 +15,15 @@ const SellerMessages = () => {
 
     useEffect(() => {
         const fetchConversations = async () => {
-            const shopID = localStorage.getItem("shopID");
-            if (!shopID) {
-                console.error("Shop ID not found in local storage");
+            const customerID = localStorage.getItem("customerID");
+            if (!customerID) {
+                console.error("Customer ID not found in local storage");
                 return;
             }
 
             try {
                 const response = await axios.get(
-                    `http://localhost:8081/conversations/${shopID}`
+                    `http://localhost:8081/customer-conversations/${customerID}`
                 );
                 setConversations(response.data);
             } catch (error) {
@@ -38,10 +38,10 @@ const SellerMessages = () => {
         let interval;
         if (selectedConversation) {
             const fetchMessages = async () => {
-                const shopID = localStorage.getItem("shopID");
+                const customerID = localStorage.getItem("customerID");
                 try {
                     const response = await axios.get(
-                        `http://localhost:8081/messages/${shopID}/${selectedConversation.customer_id}`
+                        `http://localhost:8081/messages/${selectedConversation.shop_id}/${customerID}`
                     );
                     setMessages(response.data);
                 } catch (error) {
@@ -57,20 +57,17 @@ const SellerMessages = () => {
     }, [selectedConversation]);
 
     const handleSendMessage = async () => {
-        const shopID = localStorage.getItem("shopID");
+        const customerID = localStorage.getItem("customerID");
         const messageData = {
-            shop_id: shopID,
-            customer_id: selectedConversation.customer_id,
-            sender: "shop",
+            shop_id: selectedConversation.shop_id,
+            customer_id: customerID,
+            sender: "customer",
             message: newMessage,
         };
 
         try {
             await axios.post("http://localhost:8081/messages", messageData);
-            setMessages([
-                ...messages,
-                { ...messageData, timestamp: new Date().toISOString() },
-            ]);
+            setMessages([...messages, { ...messageData, timestamp: new Date().toISOString() }]);
             setNewMessage("");
         } catch (error) {
             console.error("Error sending message:", error);
@@ -79,39 +76,26 @@ const SellerMessages = () => {
 
     return (
         <>
-            <SellerNavbar />
+            <CustomerNavbar />
             <div className="flex">
-                <SellerSideBar
+                <CustomerSideBar
                     isCollapsed={isCollapsed}
                     toggleCollapse={toggleCollapse}
                 />
                 <div className="flex-1 flex flex-col min-h-screen bg-gray-100 p-8">
                     <div className="min-h-screen mx-auto p-6 bg-white shadow-lg rounded-lg w-full">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-                            Messages
-                        </h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Messages</h1>
                         <div className="flex">
                             <div className="w-1/4 border-r border-gray-200">
-                                <h2 className="text-xl font-bold mb-4">
-                                    Conversations
-                                </h2>
+                                <h2 className="text-xl font-bold mb-4">Conversations</h2>
                                 <ul>
                                     {conversations.map((conversation) => (
                                         <li
-                                            key={conversation.customer_id}
-                                            className={`p-4 cursor-pointer ${
-                                                selectedConversation &&
-                                                selectedConversation.customer_id ===
-                                                    conversation.customer_id
-                                                    ? "bg-gray-200"
-                                                    : ""
-                                            }`}
-                                            onClick={() =>
-                                                setSelectedConversation(
-                                                    conversation
-                                                )
-                                            }>
-                                            {conversation.name}
+                                            key={conversation.shop_id}
+                                            className={`p-4 cursor-pointer ${selectedConversation && selectedConversation.shop_id === conversation.shop_id ? "bg-gray-200" : ""}`}
+                                            onClick={() => setSelectedConversation(conversation)}
+                                        >
+                                            {conversation.shop_name}
                                         </li>
                                     ))}
                                 </ul>
@@ -121,36 +105,17 @@ const SellerMessages = () => {
                                     <>
                                         {/* Chat header */}
                                         <div className="p-4 border-b border-gray-200">
-                                            <h2 className="text-xl font-bold">
-                                                {selectedConversation.name}
-                                            </h2>
+                                            <h2 className="text-xl font-bold">{selectedConversation.shop_name}</h2>
                                         </div>
 
                                         {/* Chat messages */}
                                         <div className="flex-1 p-4 overflow-y-auto" style={{ maxHeight: '450px' }}>
                                             {messages.map((message) => (
-                                                <div
-                                                    key={message.message_id}
-                                                    className={`mb-4 ${
-                                                        message.sender ===
-                                                        "shop"
-                                                            ? "text-right"
-                                                            : ""
-                                                    }`}>
-                                                    <div
-                                                        className={`p-3 rounded-lg max-w-xs ${
-                                                            message.sender ===
-                                                            "shop"
-                                                                ? "bg-blue-500 text-white ml-auto"
-                                                                : "bg-gray-200"
-                                                        }`}>
+                                                <div key={message.message_id} className={`mb-4 ${message.sender === "customer" ? "text-right" : ""}`}>
+                                                    <div className={`p-3 rounded-lg max-w-xs ${message.sender === "customer" ? "bg-blue-500 text-white ml-auto" : "bg-gray-200"}`}>
                                                         <p>{message.message}</p>
                                                     </div>
-                                                    <span className="text-xs text-gray-500">
-                                                        {new Date(
-                                                            message.timestamp
-                                                        ).toLocaleTimeString()}
-                                                    </span>
+                                                    <span className="text-xs text-gray-500">{new Date(message.timestamp).toLocaleTimeString()}</span>
                                                 </div>
                                             ))}
                                         </div>
@@ -162,25 +127,19 @@ const SellerMessages = () => {
                                                 className="w-full p-2 border border-gray-300 rounded-lg"
                                                 placeholder="Type a message..."
                                                 value={newMessage}
-                                                onChange={(e) =>
-                                                    setNewMessage(
-                                                        e.target.value
-                                                    )
-                                                }
+                                                onChange={(e) => setNewMessage(e.target.value)}
                                             />
                                             <button
                                                 className="mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg"
-                                                onClick={handleSendMessage}>
+                                                onClick={handleSendMessage}
+                                            >
                                                 Send
                                             </button>
                                         </div>
                                     </>
                                 ) : (
                                     <div className="flex-1 p-4">
-                                        <p className="text-gray-700">
-                                            Select a conversation to start
-                                            messaging.
-                                        </p>
+                                        <p className="text-gray-700">Select a conversation to start messaging.</p>
                                     </div>
                                 )}
                             </div>
@@ -188,9 +147,9 @@ const SellerMessages = () => {
                     </div>
                 </div>
             </div>
-            <SellerFooter />
+            <CustomerFooter />
         </>
     );
 };
 
-export default SellerMessages;
+export default CustomerMessages;

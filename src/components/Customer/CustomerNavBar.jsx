@@ -266,8 +266,8 @@ const CustomerNavBar = () => {
         navigate("/customer-riders");
     };
 
-    const handleNotificationsClick = () => {
-        navigate("/customer-notifications");
+    const handleMessagesClick = () => {
+        navigate("/customer-messages");
     };
 
     const handleProfileClick = () => {
@@ -299,10 +299,10 @@ const CustomerNavBar = () => {
                             Blogs
                         </a>
                         <a
-                            href="#customer-notifications"
-                            onClick={handleNotificationsClick}
+                            href="#customer-messages"
+                            onClick={handleMessagesClick}
                             className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
-                            Notifications
+                            Messages
                         </a>
                     </div>
                 </div>

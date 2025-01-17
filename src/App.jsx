@@ -34,6 +34,8 @@ const CustomerStatement = lazy(() => import('./components/Customer/CustomerState
 const CustomerShopDetails = lazy(() => import('./components/Customer/CustomerShopDetails'));
 const CustomerCart = lazy(() => import('./components/Customer/CustomerCart'));
 const CustomerFavouriteShops  = lazy(() => import('./components/Customer/CustomerFavouriteShops.jsx'));
+const CustomerMessages = lazy(() => import('./components/Customer/CustomerMessages'));
+
 const App = () => {
   return (
     <Router>
@@ -71,6 +73,7 @@ const App = () => {
             <Route path="/customer-cart" element={<CustomerCart />} />
             <Route path="/customer-edit-profile" element={<CustomerEditProfile />} />
             <Route path="/customer-favourite-shops" element={<CustomerFavouriteShops />} />
+            <Route path="/customer-messages" element={<CustomerMessages />} />
           </Routes>
         </Layout>
       </Suspense>

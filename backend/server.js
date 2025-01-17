@@ -608,7 +608,7 @@ app.put("/customer/:customer_id", (req, res) => {
 app.get("/customer/:customerId/due-payments", (req, res) => {
     const { customerId } = req.params;
     const query = `
-        SELECT dp.due_id, s.shop_name, dp.due_date, dp.payment_status, dp.Amount
+        SELECT dp.due_id, s.shop_name, dp.due_date, dp.payment_status, dp.Amount, dp.partial_payment_amount, dp.payment_reason
         FROM due_payment dp
         JOIN shops s ON dp.shop_id = s.shop_id
         WHERE dp.customer_id = ?
@@ -878,11 +878,9 @@ app.post("/set-discount", (req, res) => {
     });
 });
 
-
-
 ////////// Pending Orders
 // Fetch pending orders for a specific shop
-app.get('/pending-orders/:shopId', (req, res) => {
+app.get("/pending-orders/:shopId", (req, res) => {
     const { shopId } = req.params;
     const query = `
         SELECT * FROM orders
@@ -890,17 +888,16 @@ app.get('/pending-orders/:shopId', (req, res) => {
     `;
     db.query(query, [shopId], (err, results) => {
         if (err) {
-            console.error('Error fetching pending orders:', err);
-            return res.status(500).json({ error: 'Database query error' });
+            console.error("Error fetching pending orders:", err);
+            return res.status(500).json({ error: "Database query error" });
         }
         res.json(results);
     });
 });
 
-
 //// Order DOne History
 // Fetch order history for a specific shop
-app.get('/order-history/:shopId', (req, res) => {
+app.get("/order-history/:shopId", (req, res) => {
     const { shopId } = req.params;
     const query = `
         SELECT * FROM orders
@@ -908,19 +905,16 @@ app.get('/order-history/:shopId', (req, res) => {
     `;
     db.query(query, [shopId], (err, results) => {
         if (err) {
-            console.error('Error fetching order history:', err);
-            return res.status(500).json({ error: 'Database query error' });
+            console.error("Error fetching order history:", err);
+            return res.status(500).json({ error: "Database query error" });
         }
         res.json(results);
     });
 });
 
-
-
-
 // HOMEPAGE OF SELLER
 // Fetch pending order count for a specific shop
-app.get('/pending-order-count/:shopId', (req, res) => {
+app.get("/pending-order-count/:shopId", (req, res) => {
     const { shopId } = req.params;
     const query = `
         SELECT COUNT(*) AS count FROM orders
@@ -928,9 +922,100 @@ app.get('/pending-order-count/:shopId', (req, res) => {
     `;
     db.query(query, [shopId], (err, results) => {
         if (err) {
-            console.error('Error fetching pending order count:', err);
-            return res.status(500).json({ error: 'Database query error' });
+            console.error("Error fetching pending order count:", err);
+            return res.status(500).json({ error: "Database query error" });
         }
         res.json(results[0]);
+    });
+});
+
+//// Payment History of Seller by Shop ID
+
+// Fetch due payments for a specific shop
+app.get("/due-payments/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT dp.due_id, c.customer_name, dp.Amount, dp.due_date, dp.payment_status, dp.partial_payment_amount, dp.payment_reason
+        FROM due_payment dp
+        JOIN customers c ON dp.customer_id = c.customer_id
+        WHERE dp.shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching due payments:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+//////// MESSAGING SYSTEM------------------------
+
+// Fetch conversations for a specific customer
+app.get('/customer-conversations/:customerId', (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT DISTINCT s.shop_id, s.shop_name
+        FROM messages m
+        JOIN shops s ON m.shop_id = s.shop_id
+        WHERE m.customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error('Error fetching conversations:', err);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+        res.json(results);
+    });
+});
+
+// Fetch conversations for a specific shop
+app.get('/conversations/:shopId', (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT DISTINCT c.customer_id, c.customer_name AS name
+        FROM messages m
+        JOIN customers c ON m.customer_id = c.customer_id
+        WHERE m.shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error('Error fetching conversations:', err);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+        res.json(results);
+    });
+});
+
+// Fetch messages for a specific conversation
+app.get("/messages/:shopId/:customerId", (req, res) => {
+    const { shopId, customerId } = req.params;
+    const query = `
+        SELECT * FROM messages
+        WHERE shop_id = ? AND customer_id = ?
+        ORDER BY timestamp ASC
+    `;
+    db.query(query, [shopId, customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching messages:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// Send a new message
+app.post("/messages", (req, res) => {
+    const { shop_id, customer_id, sender, message } = req.body;
+    const query = `
+        INSERT INTO messages (shop_id, customer_id, sender, message)
+        VALUES (?, ?, ?, ?)
+    `;
+    db.query(query, [shop_id, customer_id, sender, message], (err, results) => {
+        if (err) {
+            console.error("Error sending message:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ message: "Message sent successfully!" });
     });
 });
