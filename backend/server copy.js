@@ -1,47 +1,118 @@
-const express = require('express');
-const mysql = require('mysql');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const multer = require('multer');
-const path = require('path');
+const express = require("express");
+const mysql = require("mysql");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
 
 const app = express();
-const port = 8081;
 
 app.use(cors());
-app.use(bodyParser.json());
-app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // Enable CORS for all requests
+app.use(bodyParser.json()); // Parse JSON bodies
 
+const port = 8081;
 // MySQL connection
 const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'budgettrackerdb',
+    host: "localhost",
+    user: "root",
+    password: "",
+    database: "budgettrackerdb",
 });
 
-db.connect(err => {
+db.connect((err) => {
     if (err) {
-        console.error('Error connecting to MySQL:', err);
+        console.error("Error connecting to MySQL:", err);
         return;
     }
-    console.log('Connected to MySQL');
+    console.log("Connected to MySQL");
 });
 
 // Test route
 app.get("/", (req, res) => {
-    return res.json("From backend side");
+    return res.json("BACKEND SAID HI PARVEZ");
 });
 
-// Fetch all customers (for testing purposes)
-app.get("/customers", (req, res) => {
-    db.query("SELECT * FROM customers", (err, results) => {
-        if (err) {
-            console.error("Error fetching customers:", err);
-            return res.status(500).json({ error: "Database query error" });
+// SIGN UP PAGE
+// Add customer registration endpoint
+
+app.post("/customer/register", (req, res) => {
+    const {
+        customer_name,
+        email,
+        username,
+        password,
+        phone_number,
+        address,
+        customer_image,
+    } = req.body;
+    const customer_level = 2; // Hardcoded customer level
+    const query = `
+        INSERT INTO Customers (customer_level, customer_name, email, username, password, phone_number, address, customer_image)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+    `;
+
+    console.log(query); // Log the query before executing it
+
+    db.query(
+        query,
+        [
+            customer_level,
+            customer_name,
+            email,
+            username,
+            password,
+            phone_number,
+            address,
+            customer_image,
+        ],
+        (err, results) => {
+            if (err) {
+                console.error("Error registering customer:", err);
+                return res.status(500).json({ error: "Database query error" });
+            }
+            res.json({ success: true, customer_id: results.insertId });
         }
-        res.json(results);
-    });
+    );
+});
+
+app.post("/seller/register", (req, res) => {
+    const {
+        username,
+        password,
+        seller_name,
+        email,
+        phone_number,
+        address,
+        seller_image,
+    } = req.body;
+    const query = `
+        INSERT INTO Sellers (username, password, seller_name, email, phone_number, address, seller_image)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+    `;
+    db.query(
+        query,
+        [
+            username,
+            password,
+            seller_name,
+            email,
+            phone_number,
+            address,
+            seller_image,
+        ],
+        (err, results) => {
+            if (err) {
+                console.error("Error registering seller:", err);
+                return res.status(500).json({ error: "Database query error" });
+            }
+            res.json({ success: true, seller_id: results.insertId });
+        }
+    );
 });
 
 // Login route
@@ -83,189 +154,8 @@ app.post("/login", (req, res) => {
     });
 });
 
-// Seller login route
-app.post("/seller-login", (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({
-            success: false,
-            message: "Email and password are required",
-        });
-    }
-
-    const query = "SELECT * FROM sellers WHERE email = ? AND password = ?";
-    db.query(query, [email, password], (err, results) => {
-        if (err) {
-            console.error("Error during seller login:", err);
-            return res
-                .status(500)
-                .json({ success: false, message: "Database query error" });
-        }
-
-        if (results.length > 0) {
-            const seller = results[0];
-            return res.json({
-                success: true,
-                shopID: seller.seller_id,
-                shopID: seller.shop_id,
-                sellerName: seller.seller_name,
-                email: seller.email,
-            });
-        } else {
-            return res
-                .status(401)
-                .json({ success: false, message: "Invalid email or password" });
-        }
-    });
-});
-
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
-});
-
-// Create a new product
-// app.post('/products', (req, res) => {
-//     const { category, title, price, stock_quantity, brand, max_discountable_price, description, image_url } = req.body;
-//     const query = 'INSERT INTO Products (category, title, price, stock_quantity, brand, max_discountable_price, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-//     db.query(query, [category, title, price, stock_quantity, brand, max_discountable_price, description, image_url], (err, results) => {
-//         if (err) {
-//             console.error('Error creating product:', err);
-//             return res.status(500).json({ error: 'Database query error' });
-//         }
-//         res.json({ success: true, product_id: results.insertId });
-//     });
-// });
-// app.post('/products', (req, res) => {
-//     const { category_id, title, price, stock_quantity, brand, max_discountable_price, description, image_url } = req.body;
-//     const query = 'INSERT INTO Products (category_id, title, price, stock_quantity, brand, max_discountable_price, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)';
-//     db.query(query, [category_id, title, price, stock_quantity, brand, max_discountable_price, description, image_url], (err, results) => {
-//         if (err) {
-//             console.error('Error creating product:', err);
-//             return res.status(500).json({ error: 'Database query error' });
-//         }
-//         res.json({ success: true, product_id: results.insertId });
-//     });
-// });
-
-const upload = multer({ storage: storage });
-
-// Create a new product
-app.post("/products", upload.single("image"), (req, res) => {
-    const {
-        category_id,
-        title,
-        price,
-        stock_quantity,
-        brand,
-        max_discountable_price,
-        description,
-    } = req.body;
-    const image_url = `/productimages/product/${req.body.category_name}/${req.file.filename}`;
-    const query =
-        "INSERT INTO Products (category_id, title, price, stock_quantity, brand, max_discountable_price, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    db.query(
-        query,
-        [
-            category_id,
-            title,
-            price,
-            stock_quantity,
-            brand,
-            max_discountable_price,
-            description,
-            image_url,
-        ],
-        (err, results) => {
-            if (err) {
-                console.error("Error creating product:", err);
-                return res.status(500).json({ error: "Database query error" });
-            }
-            res.json({ success: true, product_id: results.insertId });
-        }
-    );
-});
-
-// Fetch all products
-app.get("/products", (req, res) => {
-    db.query("SELECT * FROM Products", (err, results) => {
-        if (err) {
-            console.error("Error fetching products:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json(results);
-    });
-});
-
-// Fetch a single product by ID
-app.get("/products/:product_id", (req, res) => {
-    const { product_id } = req.params;
-    const query = "SELECT * FROM Products WHERE product_id = ?";
-    db.query(query, [product_id], (err, results) => {
-        if (err) {
-            console.error("Error fetching product:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        if (results.length > 0) {
-            res.json(results[0]);
-        } else {
-            res.status(404).json({ error: "Product not found" });
-        }
-    });
-});
-
-// Update a product by ID
-app.put("/products/:product_id", (req, res) => {
-    const { product_id } = req.params;
-    const {
-        category,
-        title,
-        price,
-        stock_quantity,
-        brand,
-        max_discountable_price,
-        description,
-        image_url,
-    } = req.body;
-    const query =
-        "UPDATE Products SET category = ?, title = ?, price = ?, stock_quantity = ?, brand = ?, max_discountable_price = ?, description = ?, image_url = ? WHERE product_id = ?";
-    db.query(
-        query,
-        [
-            category,
-            title,
-            price,
-            stock_quantity,
-            brand,
-            max_discountable_price,
-            description,
-            image_url,
-            product_id,
-        ],
-        (err, results) => {
-            if (err) {
-                console.error("Error updating product:", err);
-                return res.status(500).json({ error: "Database query error" });
-            }
-            res.json({
-                success: true,
-                message: "Product updated successfully",
-            });
-        }
-    );
-});
-
-// Delete a product by ID
-app.delete("/products/:product_id", (req, res) => {
-    const { product_id } = req.params;
-    const query = "DELETE FROM Products WHERE product_id = ?";
-    db.query(query, [product_id], (err, results) => {
-        if (err) {
-            console.error("Error deleting product:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json({ success: true, message: "Product deleted successfully" });
-    });
 });
 
 // SHOPS PART CODES
@@ -302,56 +192,6 @@ app.post("/shops", (req, res) => {
         }
     );
 });
-
-
-// fetch shops with product id to modify or update
-// Fetch product details for a specific shop and product
-app.get('/shops/:shop_id/products/:product_id', (req, res) => {
-    const { shop_id, product_id } = req.params;
-    const query = `
-        SELECT p.*, sp.shop_product_id
-        FROM Products p
-        JOIN shop_products sp ON p.product_id = sp.product_id
-        WHERE sp.shop_id = ? AND p.product_id = ?
-    `;
-    db.query(query, [shop_id, product_id], (err, results) => {
-        if (err) {
-            console.error('Error fetching product details:', err);
-            return res.status(500).json({ error: 'Database query error' });
-        }
-        if (results.length === 0) {
-            return res.status(404).json({ error: 'Product not found for this shop' });
-        }
-        res.json(results[0]);
-    });
-});
-
-// Update product details for a specific shop and product
-app.put('/shops/:shop_id/products/:product_id', upload.single('image'), (req, res) => {
-    const { shop_id, product_id } = req.params;
-    const { category_id, title, price, stock_quantity, brand, max_discountable_price, description } = req.body;
-    let image_url = req.body.image_url;
-
-    if (req.file) {
-        image_url = `/productimages/product/${req.body.category_name}/${req.file.filename}`;
-    }
-
-    const query = `
-        UPDATE Products p
-        JOIN shop_products sp ON p.product_id = sp.product_id
-        SET p.category_id = ?, p.title = ?, p.price = ?, p.stock_quantity = ?, p.brand = ?, p.max_discountable_price = ?, p.description = ?, p.image_url = ?
-        WHERE sp.shop_id = ? AND p.product_id = ?
-    `;
-    db.query(query, [category_id, title, price, stock_quantity, brand, max_discountable_price, description, image_url, shop_id, product_id], (err, results) => {
-        if (err) {
-            console.error('Error updating product:', err);
-            return res.status(500).json({ error: 'Database query error' });
-        }
-        res.json({ success: true });
-    });
-});
-
-
 
 // Fetch all shops
 app.get("/shops", (req, res) => {
@@ -593,5 +433,599 @@ app.get("/categories", (req, res) => {
             return res.status(500).json({ error: "Database query error" });
         }
         res.json(results);
+    });
+});
+
+// CUSTOMER PROFILE PAGE
+// Fetch customer information
+app.get("/customer/:customer_id", (req, res) => {
+    const { customer_id } = req.params;
+    const query = "SELECT * FROM Customers WHERE customer_id = ?";
+    db.query(query, [customer_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching customer information:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Customer not found" });
+        }
+        res.json(results[0]);
+    });
+});
+
+// Update customer information
+app.put("/customer/:customer_id", (req, res) => {
+    const { customer_id } = req.params;
+    const {
+        customer_level,
+        customer_name,
+        email,
+        username,
+        phone_number,
+        address,
+        customer_image,
+    } = req.body;
+    const query = `
+        UPDATE Customers
+        SET customer_level = ?, customer_name = ?, email = ?, username = ?, phone_number = ?, address = ?, customer_image = ?
+        WHERE customer_id = ?
+    `;
+    db.query(
+        query,
+        [
+            customer_level,
+            customer_name,
+            email,
+            username,
+            phone_number,
+            address,
+            customer_image,
+            customer_id,
+        ],
+        (err, results) => {
+            if (err) {
+                console.error("Error updating customer information:", err);
+                return res.status(500).json({ error: "Database query error" });
+            }
+            res.json({ success: true });
+        }
+    );
+});
+
+// DUE PAYMENT PAGE
+// Fetch due payments for a specific customer
+app.get("/customer/:customerId/due-payments", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT dp.due_id, s.shop_name, dp.due_date, dp.payment_status, dp.Amount, dp.partial_payment_amount, dp.payment_reason
+        FROM due_payment dp
+        JOIN shops s ON dp.shop_id = s.shop_id
+        WHERE dp.customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching due payments:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// CUSTOMER SHOP PAGE
+// Add a shop to favourite shops
+app.post("/customer/:customerId/favourite-shops", (req, res) => {
+    const { customerId } = req.params;
+    const { shopId } = req.body;
+    const query = `
+        INSERT INTO favourite_shops (customer_id, shop_id)
+        VALUES (?, ?)
+    `;
+    db.query(query, [customerId, shopId], (err, result) => {
+        if (err) {
+            console.error("Error adding favourite shop:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ success: true, fs_id: result.insertId });
+    });
+});
+
+// Remove a shop from favourite shops
+app.delete("/customer/:customerId/favourite-shops/:shopId", (req, res) => {
+    const { customerId, shopId } = req.params;
+    const query = `
+        DELETE FROM favourite_shops
+        WHERE customer_id = ? AND shop_id = ?
+    `;
+    db.query(query, [customerId, shopId], (err, result) => {
+        if (err) {
+            console.error("Error removing favourite shop:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ success: true });
+    });
+});
+
+// Fetch favourite shops for a specific customer
+app.get("/customer/:customerId/favourite-shops", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT shop_id
+        FROM favourite_shops
+        WHERE customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching favourite shops:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results.map((result) => result.shop_id));
+    });
+});
+
+// Fetch favourite shops for a specific customer
+app.get("/customer/:customerId/favourite-shops-main", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT fs.fs_id, s.shop_id, s.shop_name, s.shop_image
+        FROM favourite_shops fs
+        JOIN shops s ON fs.shop_id = s.shop_id
+        WHERE fs.customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching favourite shops:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// CUSTOMER STATEMENT Page
+// Fetch unique months from orders for a specific customer
+app.get("/customer/:customerId/order-months", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT DISTINCT DATE_FORMAT(order_date, '%Y-%m') AS month
+        FROM orders
+        WHERE customer_id = ?
+        ORDER BY month
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching order months:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results.map((result) => result.month));
+    });
+});
+
+// Fetch statements for a specific customer
+app.get("/customer/:customerId/statements", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT s.statement_id, o.order_date, o.total_price, o.status, sh.shop_name
+        FROM statement s
+        JOIN orders o ON s.order_id = o.order_id
+        JOIN shops sh ON s.shop_id = sh.shop_id
+        WHERE s.customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching statements:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+//////////////////////SELLER SECTION //////////////////////
+
+// Seller login route
+app.post("/seller-login", (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Email and password are required",
+        });
+    }
+
+    const query = "SELECT * FROM sellers WHERE email = ? AND password = ?";
+    db.query(query, [email, password], (err, results) => {
+        if (err) {
+            console.error("Error during seller login:", err);
+            return res
+                .status(500)
+                .json({ success: false, message: "Database query error" });
+        }
+
+        if (results.length > 0) {
+            const seller = results[0];
+            return res.json({
+                success: true,
+                shopID: seller.shop_id,
+                sellerName: seller.seller_name,
+                email: seller.email,
+            });
+        } else {
+            return res
+                .status(401)
+                .json({ success: false, message: "Invalid email or password" });
+        }
+    });
+});
+
+// Fetch seller information by shop_id
+app.get("/seller/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT shop_id,seller_name, email, phone_number, address, seller_image
+        FROM Sellers
+        WHERE shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching seller information:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Seller not found" });
+        }
+        res.json(results[0]);
+    });
+});
+
+///// SET DISCOUNT PAGE
+
+// // Fetch product categories
+// app.get("/product-categories", (req, res) => {
+//     const query = "SELECT * FROM product_category";
+//     db.query(query, (err, results) => {
+//         if (err) {
+//             console.error("Error fetching product categories:", err);
+//             return res.status(500).json({ error: "Database query error" });
+//         }
+//         res.json(results);
+//     });
+// });
+
+// Fetch products for a specific shop
+app.get("/shop-products/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT DISTINCT p.product_id, p.title, p.category_id
+        FROM shop_products sp
+        JOIN products p ON sp.product_id = p.product_id
+        WHERE sp.shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching shop products:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+        // console.log(results);
+    });
+});
+
+// Set or update discount for a product
+app.post("/set-discount", (req, res) => {
+    const { shop_id, product_id, discountPercent } = req.body;
+
+    // Check if a discount already exists for the given shop_id and product_id
+    const checkQuery = `
+        SELECT * FROM discountedProduct
+        WHERE shop_id = ? AND product_id = ?
+    `;
+    db.query(checkQuery, [shop_id, product_id], (err, results) => {
+        if (err) {
+            console.error("Error checking existing discount:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+
+        if (results.length > 0) {
+            // Update existing discount
+            const updateQuery = `
+                UPDATE discountedProduct
+                SET discountPercent = ?
+                WHERE shop_id = ? AND product_id = ?
+            `;
+            db.query(
+                updateQuery,
+                [discountPercent, shop_id, product_id],
+                (err, results) => {
+                    if (err) {
+                        console.error("Error updating discount:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({ message: "Discount updated successfully!" });
+                }
+            );
+        } else {
+            // Insert new discount
+            const insertQuery = `
+                INSERT INTO discountedProduct (shop_id, product_id, discountPercent)
+                VALUES (?, ?, ?)
+            `;
+            db.query(
+                insertQuery,
+                [shop_id, product_id, discountPercent],
+                (err, results) => {
+                    if (err) {
+                        console.error("Error setting discount:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({ message: "Discount set successfully!" });
+                }
+            );
+        }
+    });
+});
+
+////////// Pending Orders
+// Fetch pending orders for a specific shop
+app.get("/pending-orders/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT * FROM orders
+        WHERE shop_id = ? AND status = 'pending'
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching pending orders:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+//// Order DOne History
+// Fetch order history for a specific shop
+app.get("/order-history/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT * FROM orders
+        WHERE shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching order history:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// HOMEPAGE OF SELLER
+// Fetch pending order count for a specific shop
+app.get("/pending-order-count/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT COUNT(*) AS count FROM orders
+        WHERE shop_id = ? AND status = 'pending'
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching pending order count:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results[0]);
+    });
+});
+
+//// Payment History of Seller by Shop ID
+
+// Fetch due payments for a specific shop
+app.get("/due-payments/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT dp.due_id, c.customer_name, dp.Amount, dp.due_date, dp.payment_status, dp.partial_payment_amount, dp.payment_reason
+        FROM due_payment dp
+        JOIN customers c ON dp.customer_id = c.customer_id
+        WHERE dp.shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching due payments:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+//////// MESSAGING SYSTEM------------------------
+
+// Fetch conversations for a specific customer
+app.get("/customer-conversations/:customerId", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT DISTINCT s.shop_id, s.shop_name
+        FROM messages m
+        JOIN shops s ON m.shop_id = s.shop_id
+        WHERE m.customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching conversations:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// Fetch conversations for a specific shop
+app.get("/conversations/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT DISTINCT c.customer_id, c.customer_name AS name
+        FROM messages m
+        JOIN customers c ON m.customer_id = c.customer_id
+        WHERE m.shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching conversations:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// Fetch messages for a specific conversation
+app.get("/messages/:shopId/:customerId", (req, res) => {
+    const { shopId, customerId } = req.params;
+    const query = `
+        SELECT * FROM messages
+        WHERE shop_id = ? AND customer_id = ?
+        ORDER BY timestamp ASC
+    `;
+    db.query(query, [shopId, customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching messages:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// Send a new message
+app.post("/messages", (req, res) => {
+    const { shop_id, customer_id, sender, message } = req.body;
+    const query = `
+        INSERT INTO messages (shop_id, customer_id, sender, message)
+        VALUES (?, ?, ?, ?)
+    `;
+    db.query(query, [shop_id, customer_id, sender, message], (err, results) => {
+        if (err) {
+            console.error("Error sending message:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ message: "Message sent successfully!" });
+    });
+});
+
+/// ADD PRODUCT
+// Set up multer for file uploads
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        const categoryID = req.body.category_id;
+        const query =
+            "SELECT category_name FROM product_category WHERE category_id = ?";
+        db.query(query, [categoryID], (err, results) => {
+            if (err || results.length === 0) {
+                console.error("Error fetching category name:", err);
+                return cb(new Error("Invalid category ID"));
+            }
+            const categoryName = results[0].category_name;
+            const categoryFolder = path.join(
+                __dirname,
+                "projectimages",
+                "products",
+                categoryName.charAt(0).toUpperCase() + categoryName.slice(1)
+            );
+            if (!fs.existsSync(categoryFolder)) {
+                console.log(
+                    `Folder does not exist. Creating folder: ${categoryFolder}`
+                );
+                try {
+                    fs.mkdirSync(categoryFolder, { recursive: true });
+                    console.log(`Folder created: ${categoryFolder}`);
+                } catch (mkdirErr) {
+                    console.error("Error creating folder:", mkdirErr);
+                    return cb(new Error("Error creating folder"));
+                }
+            } else {
+                console.log(`Folder already exists: ${categoryFolder}`);
+            }
+            cb(null, categoryFolder);
+        });
+    },
+    filename: (req, file, cb) => {
+        const random2Digit = Math.floor(10 + Math.random() * 90); // Generate a random 2-digit number
+        const productTitle = req.body.title.replace(/\s+/g, "_"); // Replace spaces with underscores
+        const filename = `${productTitle}_${random2Digit}${path.extname(
+            file.originalname
+        )}`;
+        console.log(`Generated filename: ${filename}`);
+        cb(null, filename);
+    },
+});
+const upload = multer({ storage });
+
+// Create a new product
+app.post("/products", upload.single("image"), (req, res) => {
+    const {
+        category_id,
+        title,
+        price,
+        stock_quantity,
+        brand,
+        max_discountable_price,
+        description,
+    } = req.body;
+
+    const query =
+        "SELECT category_name FROM product_category WHERE category_id = ?";
+    db.query(query, [category_id], (err, results) => {
+        if (err || results.length === 0) {
+            console.error("Error fetching category name:", err);
+            return res.status(400).json({ error: "Invalid category ID" });
+        }
+        const categoryName = results[0].category_name;
+        const image_url = req.file
+            ? path.join(
+                  "projectimages",
+                  "products",
+                  categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
+                  req.file.filename
+              )
+            : null;
+
+        const insertQuery =
+            "INSERT INTO Products (category_id, title, price, stock_quantity, brand, max_discountable_price, description, image_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        db.query(
+            insertQuery,
+            [
+                category_id,
+                title,
+                price,
+                stock_quantity,
+                brand,
+                max_discountable_price,
+                description,
+                image_url,
+            ],
+            (err, results) => {
+                if (err) {
+                    console.error("Error creating product:", err);
+                    return res
+                        .status(500)
+                        .json({ error: "Database query error" });
+                }
+                res.json({
+                    message: "Product created successfully!",
+                    product_id: results.insertId,
+                });
+            }
+        );
+    });
+});
+
+// Add a product to a shop
+app.post("/shop-products", (req, res) => {
+    const { shop_id, product_id, stock } = req.body;
+    const query =
+        "INSERT INTO shop_products (shop_id, product_id, stock) VALUES (?, ?, ?)";
+    db.query(query, [shop_id, product_id, stock], (err, results) => {
+        if (err) {
+            console.error("Error adding product to shop:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ message: "Product added to shop successfully!" });
     });
 });

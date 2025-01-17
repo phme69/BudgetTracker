@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import CustomerNavbar from "./CustomerNavbar";
-import CustomerFooter from "./CustomerFooter";
 import CustomerSideBar from "./CustomerSideBar.jsx";
 
 const CustomerMessages = () => {
@@ -67,7 +65,10 @@ const CustomerMessages = () => {
 
         try {
             await axios.post("http://localhost:8081/messages", messageData);
-            setMessages([...messages, { ...messageData, timestamp: new Date().toISOString() }]);
+            setMessages([
+                ...messages,
+                { ...messageData, timestamp: new Date().toISOString() },
+            ]);
             setNewMessage("");
         } catch (error) {
             console.error("Error sending message:", error);
@@ -76,7 +77,6 @@ const CustomerMessages = () => {
 
     return (
         <>
-            <CustomerNavbar />
             <div className="flex">
                 <CustomerSideBar
                     isCollapsed={isCollapsed}
@@ -84,17 +84,30 @@ const CustomerMessages = () => {
                 />
                 <div className="flex-1 flex flex-col min-h-screen bg-gray-100 p-8">
                     <div className="min-h-screen mx-auto p-6 bg-white shadow-lg rounded-lg w-full">
-                        <h1 className="text-3xl font-bold text-gray-900 mb-6">Messages</h1>
+                        <h1 className="text-3xl font-bold text-gray-900 mb-6">
+                            Messages
+                        </h1>
                         <div className="flex">
                             <div className="w-1/4 border-r border-gray-200">
-                                <h2 className="text-xl font-bold mb-4">Conversations</h2>
+                                <h2 className="text-xl font-bold mb-4">
+                                    Conversations
+                                </h2>
                                 <ul>
                                     {conversations.map((conversation) => (
                                         <li
                                             key={conversation.shop_id}
-                                            className={`p-4 cursor-pointer ${selectedConversation && selectedConversation.shop_id === conversation.shop_id ? "bg-gray-200" : ""}`}
-                                            onClick={() => setSelectedConversation(conversation)}
-                                        >
+                                            className={`p-4 cursor-pointer ${
+                                                selectedConversation &&
+                                                selectedConversation.shop_id ===
+                                                    conversation.shop_id
+                                                    ? "bg-gray-200"
+                                                    : ""
+                                            }`}
+                                            onClick={() =>
+                                                setSelectedConversation(
+                                                    conversation
+                                                )
+                                            }>
                                             {conversation.shop_name}
                                         </li>
                                     ))}
@@ -105,17 +118,38 @@ const CustomerMessages = () => {
                                     <>
                                         {/* Chat header */}
                                         <div className="p-4 border-b border-gray-200">
-                                            <h2 className="text-xl font-bold">{selectedConversation.shop_name}</h2>
+                                            <h2 className="text-xl font-bold">
+                                                {selectedConversation.shop_name}
+                                            </h2>
                                         </div>
 
                                         {/* Chat messages */}
-                                        <div className="flex-1 p-4 overflow-y-auto" style={{ maxHeight: '450px' }}>
+                                        <div
+                                            className="flex-1 p-4 overflow-y-auto"
+                                            style={{ maxHeight: "400px" }}>
                                             {messages.map((message) => (
-                                                <div key={message.message_id} className={`mb-4 ${message.sender === "customer" ? "text-right" : ""}`}>
-                                                    <div className={`p-3 rounded-lg max-w-xs ${message.sender === "customer" ? "bg-blue-500 text-white ml-auto" : "bg-gray-200"}`}>
+                                                <div
+                                                    key={message.message_id}
+                                                    className={`mb-4 ${
+                                                        message.sender ===
+                                                        "customer"
+                                                            ? "text-right"
+                                                            : ""
+                                                    }`}>
+                                                    <div
+                                                        className={`p-3 rounded-lg max-w-xs ${
+                                                            message.sender ===
+                                                            "customer"
+                                                                ? "bg-blue-500 text-white ml-auto"
+                                                                : "bg-gray-200"
+                                                        }`}>
                                                         <p>{message.message}</p>
                                                     </div>
-                                                    <span className="text-xs text-gray-500">{new Date(message.timestamp).toLocaleTimeString()}</span>
+                                                    <span className="text-xs text-gray-500">
+                                                        {new Date(
+                                                            message.timestamp
+                                                        ).toLocaleTimeString()}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
@@ -127,19 +161,25 @@ const CustomerMessages = () => {
                                                 className="w-full p-2 border border-gray-300 rounded-lg"
                                                 placeholder="Type a message..."
                                                 value={newMessage}
-                                                onChange={(e) => setNewMessage(e.target.value)}
+                                                onChange={(e) =>
+                                                    setNewMessage(
+                                                        e.target.value
+                                                    )
+                                                }
                                             />
                                             <button
                                                 className="mt-2 bg-blue-500 text-white py-2 px-4 rounded-lg"
-                                                onClick={handleSendMessage}
-                                            >
+                                                onClick={handleSendMessage}>
                                                 Send
                                             </button>
                                         </div>
                                     </>
                                 ) : (
                                     <div className="flex-1 p-4">
-                                        <p className="text-gray-700">Select a conversation to start messaging.</p>
+                                        <p className="text-gray-700">
+                                            Select a conversation to start
+                                            messaging.
+                                        </p>
                                     </div>
                                 )}
                             </div>
@@ -147,7 +187,6 @@ const CustomerMessages = () => {
                     </div>
                 </div>
             </div>
-            <CustomerFooter />
         </>
     );
 };
