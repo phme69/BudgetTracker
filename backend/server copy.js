@@ -107,7 +107,7 @@ app.post("/seller-login", (req, res) => {
             const seller = results[0];
             return res.json({
                 success: true,
-                sellerID: seller.seller_id,
+                shopID: seller.seller_id,
                 shopID: seller.shop_id,
                 sellerName: seller.seller_name,
                 email: seller.email,

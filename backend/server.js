@@ -108,17 +108,6 @@ app.post("/seller/register", (req, res) => {
     );
 });
 
-// Fetch all customers (for testing purposes)
-app.get("/customers", (req, res) => {
-    db.query("SELECT * FROM customers", (err, results) => {
-        if (err) {
-            console.error("Error fetching customers:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json(results);
-    });
-});
-
 // Login route
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
@@ -149,43 +138,6 @@ app.post("/login", (req, res) => {
                 email: user.email,
                 address: user.address,
                 customerName: user.customer_name,
-            });
-        } else {
-            return res
-                .status(401)
-                .json({ success: false, message: "Invalid email or password" });
-        }
-    });
-});
-
-// Seller login route
-app.post("/seller-login", (req, res) => {
-    const { email, password } = req.body;
-
-    if (!email || !password) {
-        return res.status(400).json({
-            success: false,
-            message: "Email and password are required",
-        });
-    }
-
-    const query = "SELECT * FROM sellers WHERE email = ? AND password = ?";
-    db.query(query, [email, password], (err, results) => {
-        if (err) {
-            console.error("Error during seller login:", err);
-            return res
-                .status(500)
-                .json({ success: false, message: "Database query error" });
-        }
-
-        if (results.length > 0) {
-            const seller = results[0];
-            return res.json({
-                success: true,
-                sellerID: seller.seller_id,
-                shopID: seller.shop_id,
-                sellerName: seller.seller_name,
-                email: seller.email,
             });
         } else {
             return res
@@ -670,8 +622,59 @@ app.get("/customer/:customerId/due-payments", (req, res) => {
     });
 });
 
+// CUSTOMER SHOP PAGE
+// Add a shop to favourite shops
+app.post("/customer/:customerId/favourite-shops", (req, res) => {
+    const { customerId } = req.params;
+    const { shopId } = req.body;
+    const query = `
+        INSERT INTO favourite_shops (customer_id, shop_id)
+        VALUES (?, ?)
+    `;
+    db.query(query, [customerId, shopId], (err, result) => {
+        if (err) {
+            console.error("Error adding favourite shop:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ success: true, fs_id: result.insertId });
+    });
+});
+
+// Remove a shop from favourite shops
+app.delete("/customer/:customerId/favourite-shops/:shopId", (req, res) => {
+    const { customerId, shopId } = req.params;
+    const query = `
+        DELETE FROM favourite_shops
+        WHERE customer_id = ? AND shop_id = ?
+    `;
+    db.query(query, [customerId, shopId], (err, result) => {
+        if (err) {
+            console.error("Error removing favourite shop:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ success: true });
+    });
+});
+
 // Fetch favourite shops for a specific customer
 app.get("/customer/:customerId/favourite-shops", (req, res) => {
+    const { customerId } = req.params;
+    const query = `
+        SELECT shop_id
+        FROM favourite_shops
+        WHERE customer_id = ?
+    `;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching favourite shops:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results.map((result) => result.shop_id));
+    });
+});
+
+// Fetch favourite shops for a specific customer
+app.get("/customer/:customerId/favourite-shops-main", (req, res) => {
     const { customerId } = req.params;
     const query = `
         SELECT fs.fs_id, s.shop_id, s.shop_name, s.shop_image
@@ -688,7 +691,6 @@ app.get("/customer/:customerId/favourite-shops", (req, res) => {
     });
 });
 
-
 // CUSTOMER STATEMENT Page
 // Fetch unique months from orders for a specific customer
 app.get("/customer/:customerId/order-months", (req, res) => {
@@ -704,7 +706,7 @@ app.get("/customer/:customerId/order-months", (req, res) => {
             console.error("Error fetching order months:", err);
             return res.status(500).json({ error: "Database query error" });
         }
-        res.json(results.map(result => result.month));
+        res.json(results.map((result) => result.month));
     });
 });
 
@@ -724,5 +726,211 @@ app.get("/customer/:customerId/statements", (req, res) => {
             return res.status(500).json({ error: "Database query error" });
         }
         res.json(results);
+    });
+});
+
+//////////////////////SELLER SECTION //////////////////////
+
+// Seller login route
+app.post("/seller-login", (req, res) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return res.status(400).json({
+            success: false,
+            message: "Email and password are required",
+        });
+    }
+
+    const query = "SELECT * FROM sellers WHERE email = ? AND password = ?";
+    db.query(query, [email, password], (err, results) => {
+        if (err) {
+            console.error("Error during seller login:", err);
+            return res
+                .status(500)
+                .json({ success: false, message: "Database query error" });
+        }
+
+        if (results.length > 0) {
+            const seller = results[0];
+            return res.json({
+                success: true,
+                shopID: seller.shop_id,
+                sellerName: seller.seller_name,
+                email: seller.email,
+            });
+        } else {
+            return res
+                .status(401)
+                .json({ success: false, message: "Invalid email or password" });
+        }
+    });
+});
+
+// Fetch seller information by shop_id
+app.get("/seller/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT shop_id,seller_name, email, phone_number, address, seller_image
+        FROM Sellers
+        WHERE shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching seller information:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        if (results.length === 0) {
+            return res.status(404).json({ error: "Seller not found" });
+        }
+        res.json(results[0]);
+    });
+});
+
+///// SET DISCOUNT PAGE
+
+// // Fetch product categories
+// app.get("/product-categories", (req, res) => {
+//     const query = "SELECT * FROM product_category";
+//     db.query(query, (err, results) => {
+//         if (err) {
+//             console.error("Error fetching product categories:", err);
+//             return res.status(500).json({ error: "Database query error" });
+//         }
+//         res.json(results);
+//     });
+// });
+
+// Fetch products for a specific shop
+app.get("/shop-products/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT DISTINCT p.product_id, p.title, p.category_id
+        FROM shop_products sp
+        JOIN products p ON sp.product_id = p.product_id
+        WHERE sp.shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching shop products:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+        // console.log(results);
+    });
+});
+
+// Set or update discount for a product
+app.post("/set-discount", (req, res) => {
+    const { shop_id, product_id, discountPercent } = req.body;
+
+    // Check if a discount already exists for the given shop_id and product_id
+    const checkQuery = `
+        SELECT * FROM discountedProduct
+        WHERE shop_id = ? AND product_id = ?
+    `;
+    db.query(checkQuery, [shop_id, product_id], (err, results) => {
+        if (err) {
+            console.error("Error checking existing discount:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+
+        if (results.length > 0) {
+            // Update existing discount
+            const updateQuery = `
+                UPDATE discountedProduct
+                SET discountPercent = ?
+                WHERE shop_id = ? AND product_id = ?
+            `;
+            db.query(
+                updateQuery,
+                [discountPercent, shop_id, product_id],
+                (err, results) => {
+                    if (err) {
+                        console.error("Error updating discount:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({ message: "Discount updated successfully!" });
+                }
+            );
+        } else {
+            // Insert new discount
+            const insertQuery = `
+                INSERT INTO discountedProduct (shop_id, product_id, discountPercent)
+                VALUES (?, ?, ?)
+            `;
+            db.query(
+                insertQuery,
+                [shop_id, product_id, discountPercent],
+                (err, results) => {
+                    if (err) {
+                        console.error("Error setting discount:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({ message: "Discount set successfully!" });
+                }
+            );
+        }
+    });
+});
+
+
+
+////////// Pending Orders
+// Fetch pending orders for a specific shop
+app.get('/pending-orders/:shopId', (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT * FROM orders
+        WHERE shop_id = ? AND status = 'pending'
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error('Error fetching pending orders:', err);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+        res.json(results);
+    });
+});
+
+
+//// Order DOne History
+// Fetch order history for a specific shop
+app.get('/order-history/:shopId', (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT * FROM orders
+        WHERE shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error('Error fetching order history:', err);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+        res.json(results);
+    });
+});
+
+
+
+
+// HOMEPAGE OF SELLER
+// Fetch pending order count for a specific shop
+app.get('/pending-order-count/:shopId', (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT COUNT(*) AS count FROM orders
+        WHERE shop_id = ? AND status = 'pending'
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error('Error fetching pending order count:', err);
+            return res.status(500).json({ error: 'Database query error' });
+        }
+        res.json(results[0]);
     });
 });

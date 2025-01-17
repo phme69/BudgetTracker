@@ -212,14 +212,14 @@
 //     const location = useLocation();
 //     const locationState = location.state || {};
 //     const {
-//         sellerID: locationSellerId,
+//         shopID: locationSellerId,
 //         name: locationName,
 //         shopID,
 //     } = locationState;
 
 //     useEffect(() => {
 //         if (locationSellerId && locationName) {
-//             localStorage.setItem("sellerID", locationSellerId);
+//             localStorage.setItem("shopID", locationSellerId);
 //             localStorage.setItem("name", locationName);
 //         }
 //         if (shopID) {
@@ -227,7 +227,7 @@
 //         }
 //     }, [locationSellerId, locationName, shopID]);
 
-//     const sellerID = localStorage.getItem("sellerID") || "Unknown";
+//     const shopID = localStorage.getItem("shopID") || "Unknown";
 //     const name = localStorage.getItem("name") || "Seller";
 //     const shopId = localStorage.getItem("shopID");
 
@@ -447,19 +447,19 @@ const SellerModifyProduct = () => {
 
     const location = useLocation();
     const locationState = location.state || {};
-    const { sellerID: locationSellerId, name: locationName } = locationState;
+    const { shopID: locationSellerId, name: locationName } = locationState;
 
     useEffect(() => {
         if (locationSellerId && locationName) {
-            localStorage.setItem("sellerID", locationSellerId);
+            localStorage.setItem("shopID", locationSellerId);
             localStorage.setItem("name", locationName);
         }
     }, [locationSellerId, locationName]);
 
-    const sellerID = localStorage.getItem("sellerID") || "Unknown";
+    const shopID = localStorage.getItem("shopID") || "Unknown";
     const name = localStorage.getItem("name") || "Seller";
 
-    console.log("SellerModifyProduct received:", { sellerID, name }); // Debugging line
+    console.log("SellerModifyProduct received:", { shopID, name }); // Debugging line
 
     return (
         <>

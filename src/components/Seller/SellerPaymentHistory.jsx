@@ -10,19 +10,19 @@ const SellerPaymentHistory = () => {
 
     const location = useLocation();
     const locationState = location.state || {};
-    const { sellerID: locationSellerId, name: locationName } = locationState;
+    const { shopID: locationSellerId, name: locationName } = locationState;
 
     useEffect(() => {
         if (locationSellerId && locationName) {
-            localStorage.setItem("sellerID", locationSellerId);
+            localStorage.setItem("shopID", locationSellerId);
             localStorage.setItem("name", locationName);
         }
     }, [locationSellerId, locationName]);
 
-    const sellerID = localStorage.getItem("sellerID") || "Unknown";
+    const shopID = localStorage.getItem("shopID") || "Unknown";
     const name = localStorage.getItem("name") || "Seller";
 
-    console.log("SellerPaymentHistory received:", { sellerID, name }); // Debugging line
+    console.log("SellerPaymentHistory received:", { shopID, name }); // Debugging line
 
     return (
         <>

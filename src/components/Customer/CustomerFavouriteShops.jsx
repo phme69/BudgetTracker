@@ -36,7 +36,7 @@ const FavouriteShopsHome = () => {
 
             try {
                 const response = await axios.get(
-                    `http://localhost:8081/customer/${customerID}/favourite-shops`
+                    `http://localhost:8081/customer/${customerID}/favourite-shops-main`
                 );
                 setFavouriteShops(response.data);
             } catch (error) {

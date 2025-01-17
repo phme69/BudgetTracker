@@ -4,18 +4,40 @@ import SellerNavbar from "./SellerNavbar";
 import SellerFooter from "./SellerFooter";
 import SellerSideBar from "./SellerSideBar.jsx";
 
+import axios from "axios";
+
 const Sell = () => {
-    const sellerID = localStorage.getItem("sellerID") || "Unknown";
-    console.log("From sell: " + sellerID);
+    const [pendingOrderCount, setPendingOrderCount] = useState(0);
+
+    useEffect(() => {
+        const shopID = localStorage.getItem("shopID") || "Unknown";
+        console.log("From sell: " + shopID);
+        const sellerName = localStorage.getItem("sellerName") || "Seller";
+        console.log("From sell: " + sellerName);
+
+        if (shopID !== "Unknown") {
+            axios
+                .get(`http://localhost:8081/pending-order-count/${shopID}`)
+                .then((response) => {
+                    console.log(response.data);
+                    setPendingOrderCount(response.data.count);
+                })
+                .catch((error) => {
+                    console.error("Error fetching pending order count:", error);
+                });
+        }
+    }, []);
+
+    const shopID = localStorage.getItem("shopID") || "Unknown";
     const sellerName = localStorage.getItem("sellerName") || "Seller";
-    console.log("From sell: " + sellerName);
+
     return (
         <div className="p-6 bg-white shadow rounded-lg">
             <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <div className="bg-blue-100 p-6 rounded-lg shadow-lg">
                     <h2 className="text-lg font-semibold">Welcome, {sellerName}</h2>
-                    <p className="text-gray-600">Seller ID: {sellerID}</p>
+                    <p className="text-gray-600">Seller ID: {shopID}</p>
                 </div>
                 <div className="bg-green-100 p-6 rounded-lg shadow-lg">
                     <h2 className="text-lg font-semibold">Total Sales</h2>
@@ -23,7 +45,7 @@ const Sell = () => {
                 </div>
                 <div className="bg-yellow-100 p-6 rounded-lg shadow-lg">
                     <h2 className="text-lg font-semibold">Pending Orders</h2>
-                    <p className="text-gray-600">12</p>
+                    <p className="text-gray-600">{pendingOrderCount}</p>
                 </div>
                 <div className="bg-red-100 p-6 rounded-lg shadow-lg">
                     <h2 className="text-lg font-semibold">Low Stock Products</h2>
@@ -92,19 +114,19 @@ const SellerHome = () => {
 
     const location = useLocation();
     const locationState = location.state || {};
-    const { sellerID: locationsellerID, name: locationsellerName } = locationState;
+    const { shopID: locationshopID, name: locationsellerName } = locationState;
 
     useEffect(() => {
-        if (locationsellerID && locationsellerName) {
-            localStorage.setItem("sellerID", locationsellerID);
+        if (locationshopID && locationsellerName) {
+            localStorage.setItem("shopID", locationshopID);
             localStorage.setItem("sellerName", locationsellerName);
         }
-    }, [locationsellerID, locationsellerName]);
+    }, [locationshopID, locationsellerName]);
 
-    const sellerID = localStorage.getItem("sellerID") || "Unknown";
+    const shopID = localStorage.getItem("shopID") || "Unknown";
     const sellerName = localStorage.getItem("sellerName") || "Seller";
 
-    console.log("SellerHome received:", { sellerID, sellerName }); // Debugging line
+    console.log("SellerHome received:", { shopID, sellerName }); // Debugging line
 
     return (
         <>
