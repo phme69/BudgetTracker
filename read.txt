@@ -15,3 +15,20 @@ npm run build && git add dist -f && git commit -m "new db added!" && git subtree
 
 
 npm run build && git add dist -f && git commit -m "new page" && git subtree push --prefix dist origin gh-pages-5
+
+
+
+
+
+
+
+
+
+remove.bg api key: tWXXKwZYEYtymGgG1Z11JVwL
+
+
+
+
+
+
+

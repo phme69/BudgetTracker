@@ -158,6 +158,39 @@ app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
 
+// Customer Home
+app.get("/customer-info", (req, res) => {
+    const customerId = req.query.customer_id;
+    const query = `
+        SELECT customer_id, customer_level, customer_name, customer_image
+        FROM Customers
+        WHERE customer_id = ?`;
+    db.query(query, [customerId], (err, results) => {
+        if (err) {
+            console.error("Error fetching customer info:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results[0]);
+    });
+});
+
+app.get("/chome-discounted-products", (req, res) => {
+    const query = `
+        SELECT dp.discount_id, dp.discountPercent, p.product_id, p.title, p.image_url
+        FROM discountedProduct dp
+        JOIN products p ON dp.product_id = p.product_id
+        JOIN shops s ON dp.shop_id = s.shop_id
+        ORDER BY dp.discountPercent DESC
+        LIMIT 5`;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Error fetching discounted products:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
 // SHOPS PART CODES
 // Create a new shop
 app.post("/shops", (req, res) => {
@@ -301,128 +334,6 @@ app.get("/shops/:shop_id/products", (req, res) => {
     });
 });
 
-// Add item to Cart
-app.post("/cart", (req, res) => {
-    const { customer_id, product_id, quantity } = req.body;
-
-    // Check if the item already exists in the cart
-    const checkQuery =
-        "SELECT * FROM Cart WHERE customer_id = ? AND product_id = ?";
-    db.query(checkQuery, [customer_id, product_id], (err, results) => {
-        if (err) {
-            console.error("Error checking cart item:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-
-        if (results.length > 0) {
-            // Item already exists in the cart, update the quantity
-            const updateQuery =
-                "UPDATE Cart SET quantity = quantity + ? WHERE customer_id = ? AND product_id = ?";
-            db.query(
-                updateQuery,
-                [quantity, customer_id, product_id],
-                (err, result) => {
-                    if (err) {
-                        console.error("Error updating cart item:", err);
-                        return res
-                            .status(500)
-                            .json({ error: "Database query error" });
-                    }
-                    res.json({
-                        success: true,
-                        message: "Item quantity updated in cart",
-                    });
-                }
-            );
-        } else {
-            // Item does not exist in the cart, insert a new row
-            const insertQuery =
-                "INSERT INTO Cart (customer_id, product_id, quantity) VALUES (?, ?, ?)";
-            db.query(
-                insertQuery,
-                [customer_id, product_id, quantity],
-                (err, result) => {
-                    if (err) {
-                        console.error("Error adding item to cart:", err);
-                        return res
-                            .status(500)
-                            .json({ error: "Database query error" });
-                    }
-                    res.json({ success: true, message: "Item added to cart" });
-                }
-            );
-        }
-    });
-});
-
-// Fetch cart items for a specific customer
-app.get("/cart/:customer_id", (req, res) => {
-    const { customer_id } = req.params;
-    const query = `
-        SELECT c.cart_id, c.quantity, p.product_id, p.title, p.price, p.description, p.image_url
-        FROM Cart c
-        JOIN Products p ON c.product_id = p.product_id
-        WHERE c.customer_id = ?
-    `;
-    db.query(query, [customer_id], (err, results) => {
-        if (err) {
-            console.error("Error fetching cart items:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json(results);
-    });
-});
-
-// Add a new item to the cart
-app.post("/cart", (req, res) => {
-    const { customer_id, product_id, quantity } = req.body;
-    const query = `
-        INSERT INTO Cart (customer_id, product_id, quantity)
-        VALUES (?, ?, ?)
-        ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
-    `;
-    db.query(query, [customer_id, product_id, quantity], (err, results) => {
-        if (err) {
-            console.error("Error adding item to cart:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json({ message: "Item added to cart successfully" });
-    });
-});
-
-// Update quantity of a cart item
-app.put("/cart", (req, res) => {
-    const { customer_id, product_id, quantity } = req.body;
-    const query = `
-        UPDATE Cart
-        SET quantity = ?
-        WHERE customer_id = ? AND product_id = ?
-    `;
-    db.query(query, [quantity, customer_id, product_id], (err, results) => {
-        if (err) {
-            console.error("Error updating cart item quantity:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json({ message: "Cart item quantity updated successfully" });
-    });
-});
-
-// Delete a cart item
-app.delete("/cart", (req, res) => {
-    const { customer_id, product_id } = req.body;
-    const query = `
-        DELETE FROM Cart
-        WHERE customer_id = ? AND product_id = ?
-    `;
-    db.query(query, [customer_id, product_id], (err, results) => {
-        if (err) {
-            console.error("Error deleting cart item:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json({ message: "Cart item deleted successfully" });
-    });
-});
-
 // WITHOUT LOGIN PAGE -> HOME
 // Fetch product categories
 app.get("/categories", (req, res) => {
@@ -433,6 +344,101 @@ app.get("/categories", (req, res) => {
             return res.status(500).json({ error: "Database query error" });
         }
         res.json(results);
+    });
+});
+
+// Fetch discounted products
+// app.get("/discounted-products", (req, res) => {
+//     const query = `
+//         SELECT dp.discount_id, dp.discountPercent, p.product_id, p.title, p.image_url
+//         FROM discountedProduct dp
+//         JOIN products p ON dp.product_id = p.product_id
+//         JOIN shops s ON dp.shop_id = s.shop_id`;
+//     db.query(query, (err, results) => {
+//         if (err) {
+//             console.error("Error fetching discounted products:", err);
+//             return res.status(500).json({ error: "Database query error" });
+//         }
+//         res.json(results);
+//     });
+// });
+
+app.get("/discounted-products", (req, res) => {
+    const query = `
+        SELECT dp.discount_id, dp.discountPercent, p.product_id, p.title, p.image_url
+        FROM discountedProduct dp
+        JOIN products p ON dp.product_id = p.product_id
+        JOIN shops s ON dp.shop_id = s.shop_id
+        ORDER BY dp.discountPercent DESC
+        LIMIT 5`;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Error fetching discounted products:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+app.get("/free-delivery-products", (req, res) => {
+    const query = `
+        SELECT fd.fd, fd.status, p.product_id, p.title, p.image_url, p.price
+        FROM freeDelivery fd
+        JOIN products p ON fd.product_id = p.product_id
+        WHERE fd.status = 'yes'`;
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error("Error fetching free delivery products:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// EDIT Profile
+
+app.use(
+    "/projectimages",
+    express.static(path.join(__dirname, "..", "projectimages"))
+);
+
+// Configure multer for file uploads
+const storageC = multer.diskStorage({
+    destination: (req, file, cb) => {
+        // Use path.join to navigate one level up from the backend directory to the main folder
+        const dir = path.join(__dirname, "..", "projectimages", "Customer");
+
+        // Check if the directory exists, if not, create it
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+
+        cb(null, dir); // Set the destination directory
+    },
+    filename: (req, file, cb) => {
+        const customerId = req.body.customer_id; // Retrieve customer ID from the request body
+        cb(null, `${customerId}.jpg`); // Save the file as <customer_id>.jpg
+    },
+});
+
+const uploadC = multer({ storage: storageC }); // Pass the corrected storage object
+
+// Endpoint to handle file uploads
+app.post("/cprofile-upload", uploadC.single("customer_image"), (req, res) => {
+    if (!req.file) {
+        return res.status(400).send("No file uploaded.");
+    }
+
+    // Construct the relative file path
+    const relativeFilePath = path.join(
+        "projectimages",
+        "Customer",
+        `${req.body.customer_id}.jpg`
+    );
+
+    res.status(200).json({
+        message: "File uploaded successfully.",
+        imagePath: relativeFilePath, // This is the relative path
     });
 });
 
@@ -1117,7 +1123,8 @@ app.put("/products/:product_id", upload.single("image"), (req, res) => {
         shop_id,
     } = req.body;
 
-    const query = "SELECT category_name FROM product_category WHERE category_id = ?";
+    const query =
+        "SELECT category_name FROM product_category WHERE category_id = ?";
     db.query(query, [category_id], (err, results) => {
         if (err || results.length === 0) {
             console.error("Error fetching category name:", err);
@@ -1152,7 +1159,9 @@ app.put("/products/:product_id", upload.single("image"), (req, res) => {
             (err, results) => {
                 if (err) {
                     console.error("Error updating product:", err);
-                    return res.status(500).json({ error: "Database query error" });
+                    return res
+                        .status(500)
+                        .json({ error: "Database query error" });
                 }
 
                 const updateStockQuery = `
@@ -1165,12 +1174,334 @@ app.put("/products/:product_id", upload.single("image"), (req, res) => {
                     (err, results) => {
                         if (err) {
                             console.error("Error updating product stock:", err);
-                            return res.status(500).json({ error: "Database query error" });
+                            return res
+                                .status(500)
+                                .json({ error: "Database query error" });
                         }
                         res.json({ message: "Product updated successfully!" });
                     }
                 );
             }
         );
+    });
+});
+
+/// -------------------------------------------------
+
+// Add item to Cart
+// Fetch customer info
+app.get("/customer/:id", (req, res) => {
+    const customerId = req.params.id;
+    db.query(
+        "SELECT * FROM Customers WHERE customer_id = ?",
+        [customerId],
+        (err, result) => {
+            if (err) {
+                console.error("Error fetching customer info:", err);
+                res.status(500).send("Error fetching customer info");
+            } else {
+                res.json(result[0]);
+            }
+        }
+    );
+});
+
+// Fetch shop info
+app.get("/shop/:id", (req, res) => {
+    const shopId = req.params.id;
+    db.query(
+        "SELECT * FROM Shops WHERE shop_id = ?",
+        [shopId],
+        (err, result) => {
+            if (err) {
+                console.error("Error fetching shop info:", err);
+                res.status(500).send("Error fetching shop info");
+            } else {
+                res.json(result[0]);
+            }
+        }
+    );
+});
+
+app.post("/cart", (req, res) => {
+    const { customer_id, product_id, quantity } = req.body;
+
+    // Check if the item already exists in the cart
+    const checkQuery =
+        "SELECT * FROM Cart WHERE customer_id = ? AND product_id = ?";
+    db.query(checkQuery, [customer_id, product_id], (err, results) => {
+        if (err) {
+            console.error("Error checking cart item:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+
+        if (results.length > 0) {
+            // Item already exists in the cart, update the quantity
+            const updateQuery =
+                "UPDATE Cart SET quantity = quantity + ? WHERE customer_id = ? AND product_id = ?";
+            db.query(
+                updateQuery,
+                [quantity, customer_id, product_id],
+                (err, result) => {
+                    if (err) {
+                        console.error("Error updating cart item:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({
+                        success: true,
+                        message: "Item quantity updated in cart",
+                    });
+                }
+            );
+        } else {
+            // Item does not exist in the cart, insert a new row
+            const insertQuery =
+                "INSERT INTO Cart (customer_id, product_id, quantity) VALUES (?, ?, ?)";
+            db.query(
+                insertQuery,
+                [customer_id, product_id, quantity],
+                (err, result) => {
+                    if (err) {
+                        console.error("Error adding item to cart:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({ success: true, message: "Item added to cart" });
+                }
+            );
+        }
+    });
+});
+
+// Fetch cart items for a specific customer
+app.get("/cart/:customer_id", (req, res) => {
+    const { customer_id } = req.params;
+    const query = `
+        SELECT c.cart_id, c.quantity, p.product_id, p.title, p.price, p.description, p.image_url
+        FROM Cart c
+        JOIN Products p ON c.product_id = p.product_id
+        WHERE c.customer_id = ?
+    `;
+    db.query(query, [customer_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching cart items:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json(results);
+    });
+});
+
+// Add a new item to the cart
+app.post("/cart", (req, res) => {
+    const { customer_id, product_id, quantity } = req.body;
+    const query = `
+        INSERT INTO Cart (customer_id, product_id, quantity)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE quantity = quantity + VALUES(quantity)
+    `;
+    db.query(query, [customer_id, product_id, quantity], (err, results) => {
+        if (err) {
+            console.error("Error adding item to cart:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ message: "Item added to cart successfully" });
+    });
+});
+
+// Update quantity of a cart item
+app.put("/cart", (req, res) => {
+    const { customer_id, product_id, quantity } = req.body;
+    const query = `
+        UPDATE Cart
+        SET quantity = ?
+        WHERE customer_id = ? AND product_id = ?
+    `;
+    db.query(query, [quantity, customer_id, product_id], (err, results) => {
+        if (err) {
+            console.error("Error updating cart item quantity:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ message: "Cart item quantity updated successfully" });
+    });
+});
+
+// Delete a cart item
+app.delete("/cart", (req, res) => {
+    const { customer_id, product_id } = req.body;
+    const query = `
+        DELETE FROM Cart
+        WHERE customer_id = ? AND product_id = ?
+    `;
+    db.query(query, [customer_id, product_id], (err, results) => {
+        if (err) {
+            console.error("Error deleting cart item:", err);
+            return res.status(500).json({ error: "Database query error" });
+        }
+        res.json({ message: "Cart item deleted successfully" });
+    });
+});
+
+// Fetch delivery status for products
+app.get("/deliveryStatus/:productId", (req, res) => {
+    const productId = req.params.productId;
+    const query = `
+        SELECT status FROM freeDelivery WHERE product_id = ?
+    `;
+    db.query(query, [productId], (err, result) => {
+        if (err) {
+            console.error("Error fetching delivery status:", err);
+            res.status(500).send("Error fetching delivery status");
+        } else {
+            res.json(result[0]);
+        }
+    });
+});
+
+// Customer Checkout
+// Fetch customer info for payment
+app.get("/cusPay/fetch/:id", (req, res) => {
+    const customerId = req.params.id;
+    db.query(
+        "SELECT * FROM Customers WHERE customer_id = ?",
+        [customerId],
+        (err, result) => {
+            if (err) {
+                console.error("Error fetching customer info:", err);
+                res.status(500).send("Error fetching customer info");
+            } else {
+                res.json(result[0]);
+            }
+        }
+    );
+});
+
+// Fetch shop IDs for products
+app.get("/shopProducts/:productId", (req, res) => {
+    const productId = req.params.productId;
+    const query = `
+        SELECT shop_id FROM shop_products WHERE product_id = ?
+    `;
+    db.query(query, [productId], (err, result) => {
+        if (err) {
+            console.error("Error fetching shop ID for product:", err);
+            res.status(500).send("Error fetching shop ID for product");
+        } else {
+            res.json(result[0]);
+        }
+    });
+});
+
+// Create a new order
+app.post("/orders", (req, res) => {
+    const { shop_id, customer_id, total_price, status } = req.body;
+    const query = `
+        INSERT INTO orders (shop_id, customer_id, total_price, status)
+        VALUES (?, ?, ?, ?)
+    `;
+    db.query(
+        query,
+        [shop_id, customer_id, total_price, status],
+        (err, result) => {
+            if (err) {
+                console.error("Error creating order:", err);
+                res.status(500).send("Error creating order");
+            } else {
+                res.json({ order_id: result.insertId });
+            }
+        }
+    );
+});
+
+// Create a new due payment
+app.post("/duePayment", (req, res) => {
+    const {
+        shop_id,
+        customer_id,
+        amount,
+        due_date,
+        payment_reason,
+        payment_status,
+    } = req.body;
+    const query = `
+        INSERT INTO due_payment (shop_id, customer_id, amount, due_date, payment_status, payment_reason)
+        VALUES (?, ?, ?, ?, ?, ?)
+    `;
+    db.query(
+        query,
+        [
+            shop_id,
+            customer_id,
+            amount,
+            due_date,
+            payment_status,
+            payment_reason,
+        ],
+        (err, result) => {
+            if (err) {
+                console.error("Error creating due payment:", err);
+                res.status(500).send("Error creating due payment");
+            } else {
+                res.json({ due_id: result.insertId });
+            }
+        }
+    );
+});
+
+// Create order items
+app.post("/orderItems", (req, res) => {
+    const { order_id, items } = req.body;
+    const query = `
+        INSERT INTO order_items (order_id, product_id, quantity, price)
+        VALUES ?
+    `;
+    const values = items.map((item) => [
+        order_id,
+        item.product_id,
+        item.quantity,
+        item.price,
+    ]);
+    db.query(query, [values], (err, result) => {
+        if (err) {
+            console.error("Error creating order items:", err);
+            res.status(500).send("Error creating order items");
+        } else {
+            res.json({ message: "Order items created successfully" });
+        }
+    });
+});
+
+// Create a new statement
+app.post("/statements", (req, res) => {
+    const { customer_id, shop_id, order_id } = req.body;
+    const query = `
+        INSERT INTO statement (customer_id, shop_id, order_id)
+        VALUES (?, ?, ?)
+    `;
+    db.query(query, [customer_id, shop_id, order_id], (err, result) => {
+        if (err) {
+            console.error("Error creating statement:", err);
+            res.status(500).send("Error creating statement");
+        } else {
+            res.json({ statement_id: result.insertId });
+        }
+    });
+});
+
+// Clear cart for a specific customer
+app.delete("/clearCart/:customerId", (req, res) => {
+    const customerId = req.params.customerId;
+    const query = `
+        DELETE FROM Cart WHERE customer_id = ?
+    `;
+    db.query(query, [customerId], (err, result) => {
+        if (err) {
+            console.error("Error clearing cart:", err);
+            res.status(500).send("Error clearing cart");
+        } else {
+            res.json({ message: "Cart cleared successfully" });
+        }
     });
 });

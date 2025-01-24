@@ -2,18 +2,23 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import CustomerSideBar from "./CustomerSideBar";
+import CustomerPayment from "./CustomerPayment";
+import "@fortawesome/fontawesome-free/css/all.min.css";
 
 const CustomerCart = () => {
     const navigate = useNavigate();
     const [cartItems, setCartItems] = useState([]);
     const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+    const [customerID, setCustomerID] = useState(
+        localStorage.getItem("customerID")
+    );
 
     useEffect(() => {
         // Fetch cart items
-        const customerId = localStorage.getItem("customerID"); // Retrieve the actual customer ID from localStorage
-        if (customerId) {
+        if (customerID) {
             axios
-                .get(`http://localhost:8081/cart/${customerId}`)
+                .get(`http://localhost:8081/cart/${customerID}`)
                 .then((response) => {
                     setCartItems(response.data);
                 })
@@ -23,14 +28,13 @@ const CustomerCart = () => {
         } else {
             console.error("Customer ID not found in localStorage");
         }
-    }, []);
+    }, [customerID]);
 
     const handleQuantityChange = (productId, quantity) => {
-        const customerId = localStorage.getItem("customerID");
-        if (customerId) {
+        if (customerID) {
             axios
                 .put(`http://localhost:8081/cart`, {
-                    customer_id: customerId,
+                    customer_id: customerID,
                     product_id: productId,
                     quantity,
                 })
@@ -52,11 +56,10 @@ const CustomerCart = () => {
     };
 
     const handleRemoveItem = (productId) => {
-        const customerId = localStorage.getItem("customerID");
-        if (customerId) {
+        if (customerID) {
             axios
                 .delete(`http://localhost:8081/cart`, {
-                    data: { customer_id: customerId, product_id: productId },
+                    data: { customer_id: customerID, product_id: productId },
                 })
                 .then((response) => {
                     setCartItems(
@@ -74,6 +77,23 @@ const CustomerCart = () => {
     };
 
     const toggleCollapse = () => setIsCollapsed(!isCollapsed);
+
+    // Order
+    const [selectedPayment, setSelectedPayment] = useState("None");
+
+    const selectPayment = (method) => {
+        setSelectedPayment(method);
+    };
+
+    const submitOrder = () => {
+        if (selectedPayment === "None") {
+            alert("Please select a payment method.");
+            return;
+        }
+
+        // Open the payment modal
+        setIsPaymentModalOpen(true);
+    };
 
     return (
         <div className="flex min-h-screen bg-gray-100">
@@ -165,7 +185,7 @@ const CustomerCart = () => {
                         </div>
                         <div className="flex justify-end gap-5 text-lg font-bold">
                             <span>Delivery:</span>
-                            <span id="delivery">Tk 29</span>
+                            <span id="delivery">Tk 50</span>
                         </div>
                         <div className="flex justify-end gap-5 text-xl font-bold mt-2">
                             <span>Total:</span>
@@ -175,32 +195,38 @@ const CustomerCart = () => {
                                     (acc, item) =>
                                         acc + item.price * item.quantity,
                                     0
-                                ) + 29}
+                                ) + 50}
                             </span>
                         </div>
                     </div>
                     <div className="mt-6">
-                        <h2 className="text-xl font-bold">Payment Options</h2>
-                        <div className="flex justify-around mt-4">
-                            <label className="payment-option transition-all transform hover:scale-105">
+                        <h2 className="text-2xl font-bold text-center">
+                            Payment Options
+                        </h2>
+                        <div className="flex justify-center gap-10 mt-4 space-x-4">
+                            <label className="payment-option flex items-center space-x-2 transition-all transform hover:scale-105">
                                 <input
                                     type="radio"
                                     name="payment"
                                     value="Cash"
                                     onChange={() => selectPayment("Cash")}
-                                />{" "}
-                                Cash
+                                    className="mr-2"
+                                />
+                                <i className="fas fa-money-bill-wave text-green-500 text-2xl"></i>
+                                <span className="text-xl">Cash</span>
                             </label>
-                            <label className="payment-option transition-all transform hover:scale-105">
+                            <label className="payment-option flex items-center space-x-2 transition-all transform hover:scale-105">
                                 <input
                                     type="radio"
                                     name="payment"
                                     value="Card"
                                     onChange={() => selectPayment("Card")}
-                                />{" "}
-                                Card
+                                    className="mr-2"
+                                />
+                                <i className="fas fa-credit-card text-blue-500 text-2xl"></i>
+                                <span className="text-xl">Card</span>
                             </label>
-                            <label className="payment-option transition-all transform hover:scale-105">
+                            <label className="payment-option flex items-center space-x-2 transition-all transform hover:scale-105">
                                 <input
                                     type="radio"
                                     name="payment"
@@ -208,40 +234,36 @@ const CustomerCart = () => {
                                     onChange={() =>
                                         selectPayment("Due Payment")
                                     }
-                                />{" "}
-                                Due Payment
+                                    className="mr-2"
+                                />
+                                <i className="fas fa-clock text-yellow-500 text-2xl"></i>
+                                <span className="text-xl">Due Payment</span>
                             </label>
                         </div>
                         <div
                             className="text-center mt-4 text-lg"
                             id="selected-payment">
-                            Selected Payment Method: None
+                            Selected Payment Method: {selectedPayment}
                         </div>
                     </div>
                     <button
                         className="submit mt-6 mx-auto block bg-gradient-to-r from-orange-500 to-yellow-500 text-white px-6 py-3 rounded-lg font-bold text-lg uppercase disabled:opacity-50 hover:bg-gradient-to-l hover:from-yellow-500 hover:to-orange-500"
                         id="submit-button"
                         onClick={submitOrder}
-                        disabled>
+                        disabled={selectedPayment === "None"}>
                         Submit Order
                     </button>
                 </div>
             </div>
+            <CustomerPayment
+                isOpen={isPaymentModalOpen}
+                onClose={() => setIsPaymentModalOpen(false)}
+                customerID={customerID}
+                cartItems={cartItems}
+                selectedPayment={selectedPayment}
+            />
         </div>
     );
 };
 
 export default CustomerCart;
-
-function selectPayment(paymentMethod) {
-    const paymentDisplay = document.getElementById("selected-payment");
-    paymentDisplay.textContent = `Selected Payment Method: ${paymentMethod}`;
-
-    const submitButton = document.getElementById("submit-button");
-    submitButton.disabled = false;
-    submitButton.classList.add("enabled");
-}
-
-function submitOrder() {
-    alert("Your order has been submitted!");
-}

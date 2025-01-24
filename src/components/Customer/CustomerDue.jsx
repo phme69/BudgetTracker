@@ -116,6 +116,12 @@ const CDueHome = () => {
                                 <th className="border px-4 py-2 bg-blue-600 text-white">
                                     Reason
                                 </th>
+                                <th className="border px-4 py-2 bg-blue-600 text-white">
+                                    Error
+                                </th>
+                                <th className="border px-4 py-2 bg-blue-600 text-white">
+                                    Action
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
@@ -146,6 +152,16 @@ const CDueHome = () => {
                                     </td>
                                     <td className="border px-4 py-2">
                                         {due.paymentReason || "N/A"}
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                        <button className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-400 transition duration-300">
+                                            Report
+                                        </button>
+                                    </td>
+                                    <td className="border px-4 py-2">
+                                        <button className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-400 transition duration-300">
+                                            Pay Now
+                                        </button>
                                     </td>
                                 </tr>
                             ))}
