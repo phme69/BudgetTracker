@@ -87,7 +87,7 @@ const CustomerProfile = () => {
 
                     {/* Middle Section: Additional Info */}
                     <div className="p-8">
-                        <h3 className="text-2xl font-bold text-gray-800 mb-6 border-b-2 border-blue-500 inline-block">
+                        <h3 className="text-2xl font-bold text-gray-800 mb-3 border-b-2  inline-block">
                             Personal Details
                         </h3>
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -120,22 +120,17 @@ const CustomerProfile = () => {
                                     {customer.customer_level}
                                 </p>
                             </div>
-
-                            {/* Placeholder for new attributes */}
-                            <div className="text-center p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                                <p className="text-xl font-semibold text-gray-700">
-                                    New Attribute
-                                </p>
-                                <p className="text-gray-600">Value</p>
-                            </div>
-
-                            <div className="text-center p-6 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300">
-                                <p className="text-xl font-semibold text-gray-700">
-                                    New Attribute
-                                </p>
-                                <p className="text-gray-600">Value</p>
-                            </div>
                         </div>
+                        <h3 className="mt-4 text-2xl font-bold text-gray-800 mb-1 border-b-2 inline-block">
+                            Description
+                        </h3>
+                        <textarea
+                            className="w-full p-4 bg-gray-100 rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300"
+                            rows="4"
+                            placeholder="Additional Information">
+                            Passionate customer with a love for unique products
+                            and exceptional service.
+                        </textarea>
                     </div>
                 </div>
             </div>

@@ -2,6 +2,11 @@ import React, { Suspense, lazy } from 'react';
 import { HashRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './components/Layout';
 
+// import Modal from 'react-modal';
+
+// // Set the app element for react-modal
+// Modal.setAppElement('#root');
+
 // Lazy load components
 const Home = lazy(() => import('./components/Home'));
 const SignInCustomer = lazy(() => import('./components/Customer/SignInCustomer'));
@@ -10,6 +15,7 @@ const SellerHome = lazy(() => import('./components/Seller/SellerHome.jsx'));
 const CustomerHome = lazy(() => import('./components/Customer/CustomerHome'));
 const SignAsParvez = lazy(() => import('./components/Admin/SignAsParvez.jsx'));
 const SignUpAsCustomer = lazy(() => import('./components/SignUpAsCustomer.jsx')); 
+const SignUPCreateShop = lazy(() => import('./components/Seller/SignUpCreateShop.jsx'));
 const SignUpSeller = lazy(() => import('./components/SignUpAsSeller.jsx')); 
 const SellerProfile = lazy(() => import('./components/Seller/SellerProfile'));
 const SellerAddProduct = lazy(() => import('./components/Seller/SellerAddProduct'));
@@ -35,7 +41,7 @@ const CustomerShopDetails = lazy(() => import('./components/Customer/CustomerSho
 const CustomerCart = lazy(() => import('./components/Customer/CustomerCart'));
 const CustomerFavouriteShops  = lazy(() => import('./components/Customer/CustomerFavouriteShops.jsx'));
 const CustomerMessages = lazy(() => import('./components/Customer/CustomerMessages'));
-
+const CustomerSearchResults = lazy(() => import('./components/Customer/CustomerSearchResults'));
 const App = () => {
   return (
     <Router>
@@ -48,7 +54,7 @@ const App = () => {
             <Route path="/signin-parvez" element={<SignAsParvez />} />
             <Route path="/signup-customer" element={<SignUpAsCustomer />} />
             <Route path="/signup-seller" element={<SignUpSeller />} />
-
+            <Route path="/seller-signup-create-shop" element={<SignUPCreateShop />} />
             <Route path="/seller-home" element={<SellerHome />} />
             <Route path="/seller-profile" element={<SellerProfile />} />
             <Route path="/seller-add-product" element={<SellerAddProduct />} />
@@ -74,6 +80,7 @@ const App = () => {
             <Route path="/customer-edit-profile" element={<CustomerEditProfile />} />
             <Route path="/customer-favourite-shops" element={<CustomerFavouriteShops />} />
             <Route path="/customer-messages" element={<CustomerMessages />} />
+            <Route path="/customer-search-results" element={<CustomerSearchResults />} />
           </Routes>
         </Layout>
       </Suspense>

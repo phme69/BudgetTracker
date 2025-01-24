@@ -228,22 +228,25 @@ const CustomerEditProfile = () => {
                                                 onChange={handleChange}
                                                 placeholder="Enter your customer level"
                                                 className="w-full mt-2 p-2 border rounded"
+                                                disabled={
+                                                    customer.customer_level
+                                                }
                                             />
                                         </div>
                                     </div>
                                     {/* Right Section for Image Upload */}
                                     <div
                                         {...getRootProps()}
-                                        className="border-dashed border-2 border-gray-300 p-4 rounded cursor-pointer">
+                                        className="m-10 border-dashed border-2 border-gray-300 p-4 rounded cursor-pointer flex justify-center items-center">
                                         <input {...getInputProps()} />
                                         {customer.customer_image ? (
                                             <img
                                                 src={customer.customer_image}
                                                 alt="Profile"
-                                                className="w-full h-auto rounded"
+                                                className="w-96 h-96 rounded object-cover"
                                             />
                                         ) : (
-                                            <p className="text-gray-700">
+                                            <p className="text-gray-700 text-center">
                                                 Drag & drop an image here, or
                                                 click to select one
                                             </p>

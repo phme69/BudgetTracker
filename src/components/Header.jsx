@@ -118,12 +118,12 @@ const Header = () => {
                                 >
                                     Sign In as Seller
                                 </Link>
-                                <Link
+                                {/* <Link
                                     to="/signin-parvez"
                                     className="block px-4 py-2 text-black hover:bg-gray-200 transition-all duration-300"
                                 >
                                     Sign In as Parvez
-                                </Link>
+                                </Link> */}
                             </div>
                         )}
                     </div>

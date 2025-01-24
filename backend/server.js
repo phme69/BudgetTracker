@@ -37,26 +37,30 @@ app.get("/", (req, res) => {
     return res.json("BACKEND SAID HI PARVEZ");
 });
 
-// SIGN UP PAGE
-// Add customer registration endpoint
+// SIGN UP PAGE------------------------------------
 
-app.post("/customer/register", (req, res) => {
-    const {
-        customer_name,
-        email,
-        username,
-        password,
-        phone_number,
-        address,
-        customer_image,
-    } = req.body;
+// // Add customer registration endpoint
+// Multer setup for image uploads
+const storage_SC = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, path.join(__dirname, "..", "projectimages", "Customer")); // Save image to the correct folder
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`); // Generate unique filename
+    },
+});
+
+const upload_SC = multer({ storage: storage_SC });
+
+// Endpoint to handle customer registration and image upload
+app.post("/customer/register", upload_SC.single("image"), (req, res) => {
+    const { customer_name, email, username, password, phone_number, address } =
+        req.body;
     const customer_level = 2; // Hardcoded customer level
     const query = `
-        INSERT INTO Customers (customer_level, customer_name, email, username, password, phone_number, address, customer_image)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Customers (customer_level, customer_name, email, username, password, phone_number, address)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
     `;
-
-    console.log(query); // Log the query before executing it
 
     db.query(
         query,
@@ -68,54 +72,327 @@ app.post("/customer/register", (req, res) => {
             password,
             phone_number,
             address,
-            customer_image,
         ],
         (err, results) => {
             if (err) {
                 console.error("Error registering customer:", err);
                 return res.status(500).json({ error: "Database query error" });
             }
-            res.json({ success: true, customer_id: results.insertId });
+
+            const customerId = results.insertId;
+            const tempImagePath = req.file.path;
+            const targetImagePath = `projectimages/Customer/${customerId}.jpg`;
+
+            // Move the image to the target directory
+            fs.rename(
+                tempImagePath,
+                path.join(
+                    __dirname,
+                    "..",
+                    "projectimages",
+                    "Customer",
+                    `${customerId}.jpg`
+                ),
+                (err) => {
+                    if (err) {
+                        console.error("Error moving image:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Error moving image" });
+                    }
+
+                    // Update the customer record with the image path
+                    const updateQuery = `
+                    UPDATE Customers
+                    SET customer_image = ?
+                    WHERE customer_id = ?
+                `;
+                    db.query(
+                        updateQuery,
+                        [targetImagePath, customerId],
+                        (err) => {
+                            if (err) {
+                                console.error(
+                                    "Error updating customer image path:",
+                                    err
+                                );
+                                return res
+                                    .status(500)
+                                    .json({ error: "Database query error" });
+                            }
+
+                            res.json({
+                                success: true,
+                                customer_id: customerId,
+                                imageUrl: targetImagePath,
+                            });
+                        }
+                    );
+                }
+            );
         }
     );
 });
 
-app.post("/seller/register", (req, res) => {
-    const {
-        username,
-        password,
-        seller_name,
-        email,
-        phone_number,
-        address,
-        seller_image,
-    } = req.body;
+// Seller part
+
+// Ensure the temporary upload directory exists
+const tempUploadDir = path.join(__dirname, "uploads");
+if (!fs.existsSync(tempUploadDir)) {
+    fs.mkdirSync(tempUploadDir, { recursive: true });
+}
+
+// Multer setup for seller image uploads
+const storage_SS = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, tempUploadDir); // Temporary upload directory
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+const upload_SS = multer({ storage: storage_SS });
+
+// Endpoint to handle seller registration and image upload
+app.post("/seller/register", upload_SS.single("image"), (req, res) => {
+    const { username, password, seller_name, email, phone_number, address } =
+        req.body;
+
+    if (!username || !password || !seller_name || !email) {
+        return res.status(400).json({ error: "Required fields are missing." });
+    }
+
+    // Insert seller data into the database
     const query = `
-        INSERT INTO Sellers (username, password, seller_name, email, phone_number, address, seller_image)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO Sellers 
+        (username, password, seller_name, email, phone_number, address)
+        VALUES (?, ?, ?, ?, ?, ?)
     `;
+
     db.query(
         query,
-        [
-            username,
-            password,
-            seller_name,
-            email,
-            phone_number,
-            address,
-            seller_image,
-        ],
+        [username, password, seller_name, email, phone_number, address],
         (err, results) => {
             if (err) {
-                console.error("Error registering seller:", err);
-                return res.status(500).json({ error: "Database query error" });
+                console.error("Database error:", err);
+                return res
+                    .status(500)
+                    .json({ error: "Error inserting seller data." });
             }
-            res.json({ success: true, seller_id: results.insertId });
+
+            const shopId = results.insertId;
+            const tempImagePath = req.file ? req.file.path : null;
+
+            if (tempImagePath) {
+                const targetDir = path.join(
+                    __dirname,
+                    "../projectimages/Seller"
+                );
+                const targetImagePath = path.join(targetDir, `${shopId}.jpg`);
+
+                // Create the target directory if it doesn't exist
+                if (!fs.existsSync(targetDir)) {
+                    fs.mkdirSync(targetDir, { recursive: true });
+                }
+
+                // Rename the temporary file to the shop ID
+                fs.rename(tempImagePath, targetImagePath, (err) => {
+                    if (err) {
+                        console.error("Error renaming image:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Error saving seller image." });
+                    }
+
+                    // Update the seller's image path in the database
+                    const updateQuery = `
+                        UPDATE Sellers 
+                        SET seller_image = ? 
+                        WHERE shop_id = ?
+                    `;
+                    db.query(
+                        updateQuery,
+                        [
+                            path.join("projectimages/Seller", `${shopId}.jpg`),
+                            shopId,
+                        ],
+                        (err) => {
+                            if (err) {
+                                console.error(
+                                    "Error updating image path:",
+                                    err
+                                );
+                                return res.status(500).json({
+                                    error: "Error updating seller image path.",
+                                });
+                            }
+
+                            res.status(201).json({
+                                message: "Seller registered successfully.",
+                                shopId,
+                            });
+                        }
+                    );
+                });
+            } else {
+                res.status(201).json({
+                    message: "Seller registered successfully without an image.",
+                    shopId,
+                });
+            }
         }
     );
 });
 
-// Login route
+// Endpoint to get shop details by shop ID
+app.get("/create-shop/:shopID", (req, res) => {
+    const { shopID } = req.params;
+    console.log(`Fetching details for shop ID: ${shopID}`);
+
+    const query = `
+        SELECT shop_name, shop_image, area_code, area_name, full_address, shop_rating
+        FROM Shops
+        WHERE shop_id = ?
+    `;
+
+    db.query(query, [shopID], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res
+                .status(500)
+                .json({ error: "Error fetching shop details." });
+        }
+
+        if (results.length === 0) {
+            console.log(`Shop not found for ID: ${shopID}`);
+            return res.status(404).json({ error: "Shop not found." });
+        }
+
+        console.log(`Shop details fetched successfully for ID: ${shopID}`);
+        res.status(200).json(results[0]);
+    });
+});
+
+// Create Shop
+const storage_SH = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, tempUploadDir); // Temporary upload directory
+    },
+    filename: (req, file, cb) => {
+        cb(null, `${Date.now()}-${file.originalname}`);
+    },
+});
+
+const upload_SH = multer({ storage: storage_SH });
+
+app.post("/shop/register", upload_SH.single("image"), (req, res) => {
+    const { shop_name, area_code, area_name, full_address, shop_id } = req.body;
+
+    if (!shop_name || !shop_id) {
+        return res
+            .status(400)
+            .json({ error: "Shop name and shop ID are required." });
+    }
+
+    const checkShopQuery = `SELECT shop_id FROM Sellers WHERE shop_id = ?`;
+    db.query(checkShopQuery, [shop_id], (err, results) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res.status(500).json({ error: "Error checking shop ID." });
+        }
+
+        if (results.length === 0) {
+            return res.status(400).json({ error: "Shop ID does not exist." });
+        }
+
+        const query = `
+            INSERT INTO Shops 
+            (shop_name, area_code, area_name, full_address, shop_id)
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        db.query(
+            query,
+            [shop_name, area_code, area_name, full_address, shop_id],
+            (err, results) => {
+                if (err) {
+                    console.error("Database error:", err);
+                    return res
+                        .status(500)
+                        .json({ error: "Error inserting shop data." });
+                }
+
+                const tempImagePath = req.file ? req.file.path : null;
+
+                if (tempImagePath) {
+                    const targetDir = path.join(
+                        __dirname,
+                        "../projectimages/shops"
+                    );
+                    const targetImagePath = path.join(
+                        targetDir,
+                        `${shop_id}.jpg`
+                    );
+
+                    if (!fs.existsSync(targetDir)) {
+                        fs.mkdirSync(targetDir, { recursive: true });
+                    }
+
+                    fs.rename(tempImagePath, targetImagePath, (err) => {
+                        if (err) {
+                            console.error("Error renaming image:", err);
+                            return res
+                                .status(500)
+                                .json({ error: "Error saving shop image." });
+                        }
+
+                        const updateQuery = `UPDATE Shops SET shop_image = ? WHERE shop_id = ?`;
+                        db.query(
+                            updateQuery,
+                            [
+                                path.join(
+                                    "projectimages/shops",
+                                    `${shop_id}.jpg`
+                                ),
+                                shop_id,
+                            ],
+                            (err) => {
+                                if (err) {
+                                    console.error(
+                                        "Error updating image path:",
+                                        err
+                                    );
+                                    return res.status(500).json({
+                                        error: "Error updating shop image path.",
+                                    });
+                                }
+
+                                console.log(
+                                    "Shop registered successfully with image."
+                                );
+                                res.status(201).json({
+                                    message: "Shop registered successfully.",
+                                    shop_id,
+                                });
+                            }
+                        );
+                    });
+                } else {
+                    console.log(
+                        "Shop registered successfully without an image."
+                    );
+                    res.status(201).json({
+                        message:
+                            "Shop registered successfully without an image.",
+                        shop_id,
+                    });
+                }
+            }
+        );
+    });
+});
+
 app.post("/login", (req, res) => {
     const { email, password } = req.body;
 
@@ -335,6 +612,23 @@ app.get("/shops/:shop_id/products", (req, res) => {
 });
 
 // WITHOUT LOGIN PAGE -> HOME
+
+// Search products by title
+app.get("/search-products", (req, res) => {
+    const { title } = req.query;
+    const query = `
+        SELECT * FROM Products WHERE title LIKE ?
+    `;
+    db.query(query, [`%${title}%`], (err, result) => {
+        if (err) {
+            console.error("Error searching products:", err);
+            res.status(500).send("Error searching products");
+        } else {
+            res.json(result);
+        }
+    });
+});
+
 // Fetch product categories
 app.get("/categories", (req, res) => {
     const query = "SELECT * FROM product_category";
@@ -443,6 +737,91 @@ app.post("/cprofile-upload", uploadC.single("customer_image"), (req, res) => {
 });
 
 // CUSTOMER PROFILE PAGE
+
+// CusNav search
+// Endpoint to perform search
+// app.get("/cusnav-search", (req, res) => {
+//     const { query, category } = req.query;
+//     let searchQuery = `
+//         SELECT p.*, sp.shop_id
+//         FROM products p
+//         JOIN shop_products sp ON p.product_id = sp.product_id
+//         WHERE p.title LIKE ? OR p.description LIKE ?
+//     `;
+//     const params = [`%${query}%`, `%${query}%`];
+
+//     if (category) {
+//         searchQuery += " AND p.category_id = (SELECT category_id FROM product_category WHERE category_name = ?)";
+//         params.push(category);
+//     }
+
+//     db.query(searchQuery, params, (err, results) => {
+//         if (err) {
+//             console.error("Database error:", err);
+//             return res.status(500).json({ error: "Error performing search." });
+//         }
+//         res.status(200).json(results);
+//     });
+// });
+app.get("/cusnav-search", (req, res) => {
+    const { query } = req.query;
+
+    // Query to search products and match categories
+    const productSearchQuery = `
+        SELECT p.*, sp.shop_id 
+        FROM products p
+        JOIN shop_products sp ON p.product_id = sp.product_id
+        WHERE p.title LIKE ? OR p.description LIKE ?
+    `;
+
+    const categorySearchQuery = `
+        SELECT p.*, sp.shop_id 
+        FROM products p
+        JOIN shop_products sp ON p.product_id = sp.product_id
+        WHERE p.category_id = (
+            SELECT category_id 
+            FROM product_category 
+            WHERE category_name LIKE ?
+        )
+    `;
+
+    const productSearchParams = [`%${query}%`, `%${query}%`];
+    const categorySearchParams = [`%${query}%`];
+
+    // Execute both queries and combine results
+    db.query(productSearchQuery, productSearchParams, (err, productResults) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res
+                .status(500)
+                .json({ error: "Error performing product search." });
+        }
+
+        db.query(
+            categorySearchQuery,
+            categorySearchParams,
+            (err, categoryResults) => {
+                if (err) {
+                    console.error("Database error:", err);
+                    return res
+                        .status(500)
+                        .json({ error: "Error performing category search." });
+                }
+
+                // Combine and remove duplicates
+                const combinedResults = [...productResults, ...categoryResults];
+                const uniqueResults = Array.from(
+                    new Map(
+                        combinedResults.map((item) => [item.product_id, item])
+                    ).values()
+                );
+
+                res.status(200).json(uniqueResults);
+            }
+        );
+    });
+});
+
 // Fetch customer information
 app.get("/customer/:customer_id", (req, res) => {
     const { customer_id } = req.params;

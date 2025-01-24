@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useNavigate } from "react-router-dom";
 
 const CustomerProfileHover = ({ customer }) => {
     const [modalContent, setModalContent] = useState(null);
@@ -11,6 +11,109 @@ const CustomerProfileHover = ({ customer }) => {
 
     const closeModal = () => {
         setModalContent(null);
+    };
+
+    const getModalContent = (content) => {
+        switch (content) {
+            case "Favourites":
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Favourites
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                            Here are your favourite items. Explore and enjoy
+                            your top picks!
+                        </p>
+                    </div>
+                );
+            case "Location":
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Location
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                            Here is your current location information. Update as
+                            needed!
+                        </p>
+                    </div>
+                );
+            case "Languages":
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Languages
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                            Choose your preferred language to enhance your
+                            experience.
+                        </p>
+                    </div>
+                );
+            case "Clear Cache":
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Clear Cache
+                        </h2>
+                        <button
+                            className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
+                            onClick={() => {
+                                localStorage.clear();
+                                alert("Cache cleared successfully!");
+                            }}>
+                            Clear Cache
+                        </button>
+                    </div>
+                );
+            case "Clear History":
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Clear History
+                        </h2>
+                        <button
+                            className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                            onClick={() => {
+                                console.clear();
+                                alert("History cleared successfully!");
+                            }}>
+                            Clear History
+                        </button>
+                    </div>
+                );
+            case "Help":
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Help
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                            Find answers to common questions and get support
+                            below:
+                        </p>
+                        <a
+                            href="https://www.github.com/parvezhossainme"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="mt-4 inline-block px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
+                            Go to Help Center
+                        </a>
+                    </div>
+                );
+            default:
+                return (
+                    <div className="p-4 text-center">
+                        <h2 className="text-xl font-bold text-gray-800">
+                            Not Found
+                        </h2>
+                        <p className="text-gray-600 mt-2">
+                            The content you are looking for is not available.
+                        </p>
+                    </div>
+                );
+        }
     };
 
     return (
@@ -29,11 +132,6 @@ const CustomerProfileHover = ({ customer }) => {
                         {customer.customer_name}
                     </p>
                     <p className="text-gray-600">{customer.phone_number}</p>
-                    <a
-                        href="#customer-profile"
-                        className="text-red-500 hover:underline mt-2 block">
-                        Click to Get Info
-                    </a>
                 </div>
                 <hr />
                 <a
@@ -50,11 +148,6 @@ const CustomerProfileHover = ({ customer }) => {
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
                     onClick={() => handleButtonClick("Languages")}>
                     Languages
-                </a>
-                <a
-                    className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
-                    onClick={() => handleButtonClick("Switch Account")}>
-                    Switch Account
                 </a>
                 <a
                     className="block px-4 py-2 text-gray-800 hover:bg-gray-100"
@@ -82,7 +175,7 @@ const CustomerProfileHover = ({ customer }) => {
                             </h2>
                             <button
                                 onClick={closeModal}
-                                className="text-gray-600 hover:text-gray-900 text-5xl">
+                                className="text-gray-600 hover:text-gray-900 text-2xl">
                                 &times;
                             </button>
                         </div>
@@ -96,130 +189,16 @@ const CustomerProfileHover = ({ customer }) => {
     );
 };
 
-const getModalContent = (content) => {
-    switch (content) {
-        case "Favourites":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Favourites
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                        Here are your favourite items. Explore and enjoy your
-                        top picks!
-                    </p>
-                </div>
-            );
-
-        case "Location":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Location
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                        Here is your current location information. Update as
-                        needed!
-                    </p>
-                </div>
-            );
-
-        case "Languages":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Languages
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                        Choose your preferred language to enhance your
-                        experience.
-                    </p>
-                </div>
-            );
-
-        case "Switch Account":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Switch Account
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                        Manage and switch between your accounts seamlessly.
-                    </p>
-                </div>
-            );
-
-        case "Clear Cache":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Clear Cache
-                    </h2>
-                    <button
-                        className="mt-4 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                        onClick={() => {
-                            localStorage.clear();
-                            alert("Cache cleared successfully!");
-                        }}>
-                        Clear Cache
-                    </button>
-                </div>
-            );
-
-        case "Clear History":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Clear History
-                    </h2>
-                    <button
-                        className="mt-4 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-                        onClick={() => {
-                            console.clear();
-                            alert("History cleared successfully!");
-                        }}>
-                        Clear History
-                    </button>
-                </div>
-            );
-
-        case "Help":
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">Help</h2>
-                    <p className="text-gray-600 mt-2">
-                        Find answers to common questions and get support below:
-                    </p>
-                    <a
-                        href="https://www.github.com/parvezhossainme"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="mt-4 inline-block px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600">
-                        Go to Help Center
-                    </a>
-                </div>
-            );
-
-        default:
-            return (
-                <div className="p-4 text-center">
-                    <h2 className="text-xl font-bold text-gray-800">
-                        Not Found
-                    </h2>
-                    <p className="text-gray-600 mt-2">
-                        The content you are looking for is not available.
-                    </p>
-                </div>
-            );
-    }
-};
-
 const CustomerNavBar = () => {
     const [customer, setCustomer] = useState({
         customer_image: "",
         customer_name: "",
         phone_number: "",
     });
+    const [searchQuery, setSearchQuery] = useState("");
+    const navigate = useNavigate();
+    const [showDropdown, setShowDropdown] = useState(false);
+    const dropdownRef = useRef(null);
 
     useEffect(() => {
         const storedCustomerID = localStorage.getItem("customerID");
@@ -229,19 +208,12 @@ const CustomerNavBar = () => {
                 .then((response) => {
                     setCustomer(response.data);
                 })
-                .catch((error) => {
-                    console.error(
-                        "Error fetching customer information:",
-                        error
-                    );
-                });
+                .catch((error) =>
+                    console.error("Error fetching customer:", error)
+                );
         }
     }, []);
 
-    const navigate = useNavigate();
-    const [showDropdown, setShowDropdown] = useState(false);
-
-    const dropdownRef = useRef(null); // for outside clikingssss
     useEffect(() => {
         const handleClickOutside = (event) => {
             if (
@@ -256,27 +228,22 @@ const CustomerNavBar = () => {
         return () => {
             document.removeEventListener("mousedown", handleClickOutside);
         };
-    }, [dropdownRef]);
+    }, []);
 
-    const handleHomeClick = () => {
-        navigate("/customer-home");
+    const handleSearchChange = (e) => setSearchQuery(e.target.value);
+
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        if (searchQuery.trim()) {
+            const queryParams = new URLSearchParams({
+                query: searchQuery,
+            }).toString();
+            navigate(`/customer-search-results?${queryParams}`);
+        }
     };
 
-    const handleRidersClick = () => {
-        navigate("/customer-riders");
-    };
-
-    const handleMessagesClick = () => {
-        navigate("/customer-messages");
-    };
-
-    const handleProfileClick = () => {
-        setShowDropdown(!showDropdown);
-    };
-
-    const customerAddCart = () => {
-        navigate("/customer-cart");
-    };
+    const handleProfileClick = () => setShowDropdown((prev) => !prev);
+    const navigateTo = (path) => navigate(path);
 
     return (
         <nav className="bg-[#79D7BE] text-gray-800 p-4 shadow-lg border-b-4 border-gray-300">
@@ -287,42 +254,39 @@ const CustomerNavBar = () => {
                     </h1>
                     <div className="flex space-x-6">
                         <a
-                            href="#customer-home"
-                            onClick={handleHomeClick}
-                            className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
+                            onClick={() => navigateTo("/customer-home")}
+                            className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4 cursor-pointer">
                             Home
                         </a>
                         <a
-                            href="#customer-blogs"
-                            onClick={handleRidersClick}
-                            className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
-                            Blogs
-                        </a>
-                        <a
-                            href="#customer-messages"
-                            onClick={handleMessagesClick}
-                            className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
+                            onClick={() => navigateTo("/customer-messages")}
+                            className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4 cursor-pointer">
                             Messages
                         </a>
                     </div>
                 </div>
-                <div className="search-bar hidden lg:flex items-center bg-gray-100 rounded-lg px-4 py-2 w-1/2">
-                    <select className="bg-transparent border-none text-gray-600 focus:outline-none">
-                        <option>All Categories</option>
-                        <option>Groceries</option>
-                        <option>Drinks</option>
-                        <option>Chocolates</option>
-                    </select>
+
+                <form
+                    onSubmit={handleSearchSubmit}
+                    className="search-bar hidden lg:flex items-center bg-gray-100 rounded-lg px-4 py-2 w-1/2">
                     <input
                         type="text"
+                        value={searchQuery}
+                        onChange={handleSearchChange}
                         className="bg-transparent border-none ml-4 focus:outline-none w-full"
                         placeholder="Search for products"
                     />
-                </div>
-                <div className="flex items-center justify-end space-x-4 gap-2">
+                    <button
+                        type="submit"
+                        className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Search
+                    </button>
+                </form>
+
+                <div className="flex items-center justify-end space-x-4">
                     <i
                         className="fas fa-shopping-cart text-4xl text-gray-800 cursor-pointer"
-                        onClick={customerAddCart}></i>
+                        onClick={() => navigateTo("/customer-cart")}></i>
                     <div className="relative" ref={dropdownRef}>
                         <img
                             src={
@@ -331,7 +295,7 @@ const CustomerNavBar = () => {
                             }
                             alt="Profile"
                             className="w-12 h-12 rounded-full cursor-pointer"
-                            onMouseDown={handleProfileClick}
+                            onClick={handleProfileClick}
                         />
                         {showDropdown && (
                             <CustomerProfileHover customer={customer} />

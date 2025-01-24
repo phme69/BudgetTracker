@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import CustomerSideBar from "./CustomerSideBar";
 import axios from "axios";
-
+import ProductCard from "./ProductCard"; // Import the ProductCard component
 import { Carousel } from "react-responsive-carousel";
 import "react-responsive-carousel/lib/styles/carousel.min.css";
 
@@ -103,6 +103,11 @@ const CustomerHome = () => {
 
 const CustomerHomeOffers = () => {
     const [discountedProducts, setDiscountedProducts] = useState([]);
+    const [selectedProduct, setSelectedProduct] = useState(null); // State to manage selected product for modal
+    const [isSuccessMessageVisible, setIsSuccessMessageVisible] =
+        useState(false);
+    const [errorMessage, setErrorMessage] = useState("");
+
     useEffect(() => {
         // Fetch discounted products
         axios
@@ -114,6 +119,41 @@ const CustomerHomeOffers = () => {
                 console.error("Error fetching discounted products:", error);
             });
     }, []);
+
+    const handleAddToCart = async (productId) => {
+        const customerId = localStorage.getItem("customerID"); // Retrieve customer ID from localStorage
+        if (!customerId) {
+            setErrorMessage("Customer not logged in.");
+            return;
+        }
+
+        const quantity = 1; // Default quantity
+        try {
+            await axios.post("http://localhost:8081/cart", {
+                customer_id: customerId,
+                product_id: productId,
+                quantity,
+            });
+            setIsSuccessMessageVisible(true);
+        } catch (error) {
+            console.error("Error adding item to cart:", error);
+            setErrorMessage("Failed to add product to cart.");
+        }
+    };
+
+    const closeSuccessMessage = () => {
+        setIsSuccessMessageVisible(false);
+        setErrorMessage("");
+    };
+
+    const openProductDetails = (product) => {
+        setSelectedProduct(product);
+    };
+
+    const closeProductDetails = () => {
+        setSelectedProduct(null);
+    };
+
     return (
         <div className="min-h-screen">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 py-8 w-full">
@@ -196,7 +236,7 @@ const CustomerHomeOffers = () => {
                                 : "from-yellow-500 to-orange-500"
                         } rounded-lg shadow-xl transform transition-transform hover:scale-105 hover:shadow-2xl`}
                         style={{ width: "250px", height: "250px" }} // Set square size
-                    >
+                        onClick={() => openProductDetails(product)}>
                         <img
                             src={product.image_url}
                             alt={product.title}
@@ -213,8 +253,68 @@ const CustomerHomeOffers = () => {
                     </div>
                 ))}
             </div>
+
+            {/* Show Product Details Modal */}
+            {selectedProduct && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded-lg shadow-lg max-w-lg w-full">
+                        <h2 className="text-2xl font-bold mb-4">
+                            {console.log(selectedProduct)}
+                            {selectedProduct.title}
+                        </h2>
+                        <img
+                            src={selectedProduct.image_url}
+                            alt={selectedProduct.title}
+                            className="w-full h-64 object-cover rounded-lg mb-4"
+                        />
+                        <p className="text-gray-600 mb-4">
+                            {selectedProduct.description}
+                        </p>
+                        <p className="text-gray-800 font-bold mb-4">
+                            {selectedProduct.discountPercent}% off
+                        </p>
+                        <button
+                            className="bg-blue-500 text-white py-2 px-4 rounded-lg"
+                            onClick={() =>
+                                handleAddToCart(selectedProduct.product_id)
+                            }>
+                            Add to Cart
+                        </button>
+                        <button
+                            className="ml-4 bg-gray-500 text-white py-2 px-4 rounded-lg"
+                            onClick={closeProductDetails}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {isSuccessMessageVisible && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-lg text-center">
+                        <p>Product added successfully!</p>
+                        <button
+                            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            onClick={closeSuccessMessage}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {errorMessage && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-6 rounded shadow-lg text-center">
+                        <p>{errorMessage}</p>
+                        <button
+                            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+                            onClick={closeSuccessMessage}>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
-
 export default CustomerHome;
