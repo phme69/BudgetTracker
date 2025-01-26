@@ -363,11 +363,9 @@ app.post("/shop/register", upload_SH.single("image"), (req, res) => {
                                         "Error updating image path:",
                                         err
                                     );
-                                    return res
-                                        .status(500)
-                                        .json({
-                                            error: "Error updating shop image path.",
-                                        });
+                                    return res.status(500).json({
+                                        error: "Error updating shop image path.",
+                                    });
                                 }
 
                                 console.log(
@@ -739,6 +737,91 @@ app.post("/cprofile-upload", uploadC.single("customer_image"), (req, res) => {
 });
 
 // CUSTOMER PROFILE PAGE
+
+// CusNav search
+// Endpoint to perform search
+// app.get("/cusnav-search", (req, res) => {
+//     const { query, category } = req.query;
+//     let searchQuery = `
+//         SELECT p.*, sp.shop_id
+//         FROM products p
+//         JOIN shop_products sp ON p.product_id = sp.product_id
+//         WHERE p.title LIKE ? OR p.description LIKE ?
+//     `;
+//     const params = [`%${query}%`, `%${query}%`];
+
+//     if (category) {
+//         searchQuery += " AND p.category_id = (SELECT category_id FROM product_category WHERE category_name = ?)";
+//         params.push(category);
+//     }
+
+//     db.query(searchQuery, params, (err, results) => {
+//         if (err) {
+//             console.error("Database error:", err);
+//             return res.status(500).json({ error: "Error performing search." });
+//         }
+//         res.status(200).json(results);
+//     });
+// });
+app.get("/cusnav-search", (req, res) => {
+    const { query } = req.query;
+
+    // Query to search products and match categories
+    const productSearchQuery = `
+        SELECT p.*, sp.shop_id 
+        FROM products p
+        JOIN shop_products sp ON p.product_id = sp.product_id
+        WHERE p.title LIKE ? OR p.description LIKE ?
+    `;
+
+    const categorySearchQuery = `
+        SELECT p.*, sp.shop_id 
+        FROM products p
+        JOIN shop_products sp ON p.product_id = sp.product_id
+        WHERE p.category_id = (
+            SELECT category_id 
+            FROM product_category 
+            WHERE category_name LIKE ?
+        )
+    `;
+
+    const productSearchParams = [`%${query}%`, `%${query}%`];
+    const categorySearchParams = [`%${query}%`];
+
+    // Execute both queries and combine results
+    db.query(productSearchQuery, productSearchParams, (err, productResults) => {
+        if (err) {
+            console.error("Database error:", err);
+            return res
+                .status(500)
+                .json({ error: "Error performing product search." });
+        }
+
+        db.query(
+            categorySearchQuery,
+            categorySearchParams,
+            (err, categoryResults) => {
+                if (err) {
+                    console.error("Database error:", err);
+                    return res
+                        .status(500)
+                        .json({ error: "Error performing category search." });
+                }
+
+                // Combine and remove duplicates
+                const combinedResults = [...productResults, ...categoryResults];
+                const uniqueResults = Array.from(
+                    new Map(
+                        combinedResults.map((item) => [item.product_id, item])
+                    ).values()
+                );
+
+                res.status(200).json(uniqueResults);
+            }
+        );
+    });
+});
+
 // Fetch customer information
 app.get("/customer/:customer_id", (req, res) => {
     const { customer_id } = req.params;

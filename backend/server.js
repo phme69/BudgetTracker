@@ -877,25 +877,6 @@ app.put("/customer/:customer_id", (req, res) => {
     );
 });
 
-// DUE PAYMENT PAGE
-// Fetch due payments for a specific customer
-app.get("/customer/:customerId/due-payments", (req, res) => {
-    const { customerId } = req.params;
-    const query = `
-        SELECT dp.due_id, s.shop_name, dp.due_date, dp.payment_status, dp.Amount, dp.partial_payment_amount, dp.payment_reason
-        FROM due_payment dp
-        JOIN shops s ON dp.shop_id = s.shop_id
-        WHERE dp.customer_id = ?
-    `;
-    db.query(query, [customerId], (err, results) => {
-        if (err) {
-            console.error("Error fetching due payments:", err);
-            return res.status(500).json({ error: "Database query error" });
-        }
-        res.json(results);
-    });
-});
-
 // CUSTOMER SHOP PAGE
 // Add a shop to favourite shops
 app.post("/customer/:customerId/favourite-shops", (req, res) => {
@@ -1882,5 +1863,82 @@ app.delete("/clearCart/:customerId", (req, res) => {
         } else {
             res.json({ message: "Cart cleared successfully" });
         }
+    });
+});
+
+// DUE PAYMENT PAGE
+// // Fetch due payments for a specific customer
+// app.get("/customer/:customerId/due-payments", (req, res) => {
+//     const { customerId } = req.params;
+//     const query = `
+//         SELECT dp.due_id, s.shop_name, dp.due_date, dp.payment_status, dp.Amount, dp.partial_payment_amount, dp.payment_reason
+//         FROM due_payment dp
+//         JOIN shops s ON dp.shop_id = s.shop_id
+//         WHERE dp.customer_id = ?
+//     `;
+//     db.query(query, [customerId], (err, results) => {
+//         if (err) {
+//             console.error("Error fetching due payments:", err);
+//             return res.status(500).json({ error: "Database query error" });
+//         }
+//         res.json(results);
+//     });
+// });
+// Fetch due payments for a customer
+app.get("/customer/:customerID/due-payments", (req, res) => {
+    const customerID = req.params.customerID;
+    const query = `
+        SELECT dp.*, s.shop_name
+        FROM due_payment dp
+        JOIN shops s ON dp.shop_id = s.shop_id
+        WHERE dp.customer_id = ?
+    `;
+    db.query(query, [customerID], (err, results) => {
+        if (err) {
+            console.error("Error fetching due payments:", err);
+            res.status(500).json({ message: "Error fetching due payments" });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Handle due payment update
+app.post("/update-duePayment", (req, res) => {
+    const { due_id, amount, payment_status } = req.body;
+    const partial_payment_amount = payment_status === "partial" ? amount : 0;
+    const query = `
+        UPDATE due_payment
+        SET payment_status = ?, partial_payment_amount = ?
+        WHERE due_id = ?
+    `;
+    db.query(
+        query,
+        [payment_status, partial_payment_amount, due_id],
+        (err, result) => {
+            if (err) {
+                console.error("Error updating due payment:", err);
+                res.status(500).json({ message: "Error updating due payment" });
+                return;
+            }
+            res.status(200).json({ message: "Payment updated successfully" });
+        }
+    );
+});
+
+// Handle report submission
+app.post("/report", (req, res) => {
+    const { due_id, reported_by, report_reason } = req.body;
+    const query = `
+        INSERT INTO Report (due_id, reported_by, report_reason)
+        VALUES (?, ?, ?)
+    `;
+    db.query(query, [due_id, reported_by, report_reason], (err, result) => {
+        if (err) {
+            console.error("Error submitting report:", err);
+            res.status(500).json({ message: "Error submitting report" });
+            return;
+        }
+        res.status(201).json({ message: "Report submitted successfully" });
     });
 });
