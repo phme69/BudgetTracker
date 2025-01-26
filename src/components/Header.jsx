@@ -64,7 +64,7 @@ const Header = () => {
     return (
         <header className="bg-[#79D7BE] h-max text-white border-b-4 border-white shadow-lg">
             <div className="container mx-auto  py-4 flex justify-between items-center">
-                <h1 className="text-3xl font-semibold text-black tracking-wide ">
+                <h1 className="mx-5 text-3xl font-semibold text-black tracking-wide ">
                     BUDGET TRACKER
                 </h1>
                 <nav className="flex items-center space-x-6 mx-16">

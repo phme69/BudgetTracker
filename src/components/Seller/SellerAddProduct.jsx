@@ -4,7 +4,7 @@ import axios from "axios";
 import SellerNavbar from "./SellerNavbar";
 import SellerFooter from "./SellerFooter";
 import SellerSideBar from "./SellerSideBar";
-
+import { useNavigate } from "react-router-dom";
 const AddProduct = () => {
     const [categories, setCategories] = useState([]);
     const [formData, setFormData] = useState({
@@ -19,6 +19,8 @@ const AddProduct = () => {
     });
     const [dragActive, setDragActive] = useState(false);
     const [showModal, setShowModal] = useState(false);
+
+    const navigate = useNavigate();
 
     useEffect(() => {
         // Fetch product categories from database
@@ -119,8 +121,10 @@ const AddProduct = () => {
                 stock: 10,
             });
         } catch (error) {
-            console.error("Error adding product:", error);
-            alert("Error adding product.");
+            // console.error("Error adding product:", error);
+            // alert("Error adding product.");
+            navigate('/seller-home');
+
         }
     };
 

@@ -1585,12 +1585,30 @@ app.get("/shop-products-by-id/:product_id", (req, res) => {
 });
 
 // Fetch all products for dropdown
+// app.get("/shop-products-update", (req, res) => {
+//     const query = `
+//         SELECT DISTINCT p.product_id, p.title 
+//         FROM Products p 
+//         JOIN shop_products sp ON p.product_id = sp.product_id`;
+//     db.query(query, (err, results) => {
+//         if (err) {
+//             console.error("Error fetching products:", err);
+//             return res.status(500).json({ error: "Database query error" });
+//         }
+//         res.json(results);
+//     });
+// });
+
+// Fetch products for a specific shop
 app.get("/shop-products-update", (req, res) => {
+    const { shop_id } = req.query;
     const query = `
         SELECT DISTINCT p.product_id, p.title 
         FROM Products p 
-        JOIN shop_products sp ON p.product_id = sp.product_id`;
-    db.query(query, (err, results) => {
+        JOIN shop_products sp ON p.product_id = sp.product_id
+        WHERE sp.shop_id = ?
+    `;
+    db.query(query, [shop_id], (err, results) => {
         if (err) {
             console.error("Error fetching products:", err);
             return res.status(500).json({ error: "Database query error" });

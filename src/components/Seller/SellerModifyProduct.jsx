@@ -23,7 +23,9 @@ const ModifyProduct = () => {
     const [dragActive, setDragActive] = useState(false);
 
     useEffect(() => {
-        // Fetch product categories
+        const shopID = localStorage.getItem("shopID");
+
+        // Fetch categories
         axios
             .get("http://localhost:8081/categories")
             .then((response) => setCategories(response.data))
@@ -31,9 +33,11 @@ const ModifyProduct = () => {
                 console.error("Error fetching categories:", error)
             );
 
-        // Fetch all products for dropdown
+        // Fetch products for the specific shop
         axios
-            .get("http://localhost:8081/shop-products-update")
+            .get("http://localhost:8081/shop-products-update", {
+                params: { shop_id: shopID },
+            })
             .then((response) => setProducts(response.data))
             .catch((error) => console.error("Error fetching products:", error));
     }, []);

@@ -285,7 +285,7 @@ const SellerNavBar = () => {
                             className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
                             Home
                         </Link>
-                        {["Profile", "Riders", "About", "Contact"].map(
+                        {["Profile", "About", "Contact"].map(
                             (item, index) => (
                                 <Link
                                     key={index}

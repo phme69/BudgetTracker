@@ -284,20 +284,19 @@ const Home = () => {
                 </div>
             </div>
 
-            {/* Product Categories */}
             <div className="mb-10">
                 <h2 className="text-3xl font-bold mb-6">Product Categories</h2>
-                <div className="flex space-x-8">
-                    {categories.map((category, index) => (
+                <div className="flex flex-wrap justify-start space-x-4">
+                    {categories.slice(0, 12).map((category, index) => (
                         <div
                             key={index}
-                            className="text-center"
+                            className="text-center mb-4"
                             onClick={handleOpenModal}>
                             <div className="w-52 h-52 bg-gradient-to-r from-indigo-400 to-cyan-500 rounded-lg shadow-lg hover:scale-110 transform transition-all duration-300">
                                 <img
                                     src={category.category_image}
                                     alt={category.category_name}
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-full object-cover rounded-lg"
                                 />
                             </div>
                             <p className="mt-2 text-lg font-semibold">

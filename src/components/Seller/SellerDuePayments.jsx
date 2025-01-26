@@ -62,9 +62,9 @@ const SellerDuePayments = () => {
                                         <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700">
                                             Payment Reason
                                         </th>
-                                        <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700">
+                                        {/* <th className="py-2 px-4 border-b border-gray-200 bg-gray-100 text-left text-sm font-semibold text-gray-700">
                                             Actions
-                                        </th>
+                                        </th> */}
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -113,11 +113,11 @@ const SellerDuePayments = () => {
                                                     <td className="py-2 px-4 border-b border-gray-200">
                                                         {payment.payment_reason}
                                                     </td>
-                                                    <td className="py-2 px-4 border-b border-gray-200">
+                                                    {/* <td className="py-2 px-4 border-b border-gray-200">
                                                         <button className="bg-blue-500 text-white py-1 px-3 rounded-lg">
                                                             Show Order Items
                                                         </button>
-                                                    </td>
+                                                    </td> */}
                                                 </tr>
                                             ))
                                     )}
