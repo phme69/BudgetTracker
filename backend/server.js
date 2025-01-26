@@ -466,7 +466,7 @@ app.get("/chome-discounted-products", (req, res) => {
         }
         res.json(results);
     });
-});
+}); // QQ
 
 // SHOPS PART CODES
 // Create a new shop
@@ -641,21 +641,6 @@ app.get("/categories", (req, res) => {
     });
 });
 
-// Fetch discounted products
-// app.get("/discounted-products", (req, res) => {
-//     const query = `
-//         SELECT dp.discount_id, dp.discountPercent, p.product_id, p.title, p.image_url
-//         FROM discountedProduct dp
-//         JOIN products p ON dp.product_id = p.product_id
-//         JOIN shops s ON dp.shop_id = s.shop_id`;
-//     db.query(query, (err, results) => {
-//         if (err) {
-//             console.error("Error fetching discounted products:", err);
-//             return res.status(500).json({ error: "Database query error" });
-//         }
-//         res.json(results);
-//     });
-// });
 
 app.get("/discounted-products", (req, res) => {
     const query = `
@@ -672,7 +657,7 @@ app.get("/discounted-products", (req, res) => {
         }
         res.json(results);
     });
-});
+}); // QQ
 
 app.get("/free-delivery-products", (req, res) => {
     const query = `
@@ -783,7 +768,7 @@ app.get("/cusnav-search", (req, res) => {
             FROM product_category 
             WHERE category_name LIKE ?
         )
-    `;
+    `; // QQ
 
     const productSearchParams = [`%${query}%`, `%${query}%`];
     const categorySearchParams = [`%${query}%`];
@@ -982,7 +967,7 @@ app.get("/customer/:customerId/statements", (req, res) => {
         }
         res.json(results);
     });
-});
+}); // QQ
 
 //////////////////////SELLER SECTION //////////////////////
 
@@ -1042,21 +1027,6 @@ app.get("/seller/:shopId", (req, res) => {
     });
 });
 
-///// SET DISCOUNT PAGE
-
-// // Fetch product categories
-// app.get("/product-categories", (req, res) => {
-//     const query = "SELECT * FROM product_category";
-//     db.query(query, (err, results) => {
-//         if (err) {
-//             console.error("Error fetching product categories:", err);
-//             return res.status(500).json({ error: "Database query error" });
-//         }
-//         res.json(results);
-//     });
-// });
-
-// Fetch products for a specific shop
 app.get("/shop-products/:shopId", (req, res) => {
     const { shopId } = req.params;
     const query = `
@@ -1167,6 +1137,24 @@ app.get("/order-history/:shopId", (req, res) => {
     });
 });
 
+// Update order status
+app.put("/update-order-status", (req, res) => {
+    const { order_id, status } = req.body;
+    const query = `
+        UPDATE orders
+        SET status = ?
+        WHERE order_id = ?
+    `;
+    db.query(query, [status, order_id], (err, result) => {
+        if (err) {
+            console.error("Error updating order status:", err);
+            res.status(500).json({ message: "Error updating order status" });
+            return;
+        }
+        res.status(200).json({ message: "Order status updated successfully" });
+    });
+});
+
 // HOMEPAGE OF SELLER
 // Fetch pending order count for a specific shop
 app.get("/pending-order-count/:shopId", (req, res) => {
@@ -1183,6 +1171,148 @@ app.get("/pending-order-count/:shopId", (req, res) => {
         res.json(results[0]);
     });
 });
+
+// Fetch total sales amount for a shop
+app.get("/total-sales/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT SUM(Amount) AS total_sales
+        FROM due_payment
+        WHERE shop_id = ? AND payment_status = 'paid'
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching total sales amount:", err);
+            res.status(500).json({
+                message: "Error fetching total sales amount",
+            });
+            return;
+        }
+        res.json({ total_sales: results[0].total_sales });
+    });
+});
+
+// Fetch reports for seller home based on shop_id
+app.get("/sellerhome-reports", (req, res) => {
+    const { shop_id } = req.query; // Assuming shop_id is passed as a query parameter
+    const query = `
+        SELECT r.*, dp.shop_id
+        FROM Report r
+        JOIN due_payment dp ON r.due_id = dp.due_id
+        WHERE dp.shop_id = ?
+    `;
+    db.query(query, [shop_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching reports:", err);
+            res.status(500).json({ message: "Error fetching reports" });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Fetch top 5 discounted products for a shop
+app.get("/top-discounted-products", (req, res) => {
+    const { shop_id } = req.query; // Assuming shop_id is passed as a query parameter
+    const query = `
+        SELECT dp.*, p.title
+        FROM discountedProduct dp
+        JOIN products p ON dp.product_id = p.product_id
+        WHERE dp.shop_id = ?
+        ORDER BY dp.discountPercent DESC
+        LIMIT 5
+    `;
+    //QQ
+    db.query(query, [shop_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching discounted products:", err);
+            res.status(500).json({
+                message: "Error fetching discounted products",
+            });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Fetch top 5 low stock products for a shop
+app.get("/low-stock-products", (req, res) => {
+    const { shop_id } = req.query; // Assuming shop_id is passed as a query parameter
+    const query = `
+        SELECT sp.*, p.title AS title
+        FROM shop_products sp
+        JOIN products p ON sp.product_id = p.product_id
+        WHERE sp.shop_id = ?
+        ORDER BY sp.stock ASC
+        LIMIT 5
+    `;
+    db.query(query, [shop_id], (err, results) => {
+        if (err) {
+            console.error("Error fetching low stock products:", err);
+            res.status(500).json({
+                message: "Error fetching low stock products",
+            });
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Fetch count of low stock products for a shop
+app.get("/low-stock-count/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT COUNT(*) AS low_stock_count
+        FROM shop_products
+        WHERE shop_id = ? AND stock < 10
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching low stock count:", err);
+            res.status(500).json({ message: "Error fetching low stock count" });
+            return;
+        }
+        res.json({ low_stock_count: results[0].low_stock_count });
+    });
+});
+
+// Fetch top discount for a shop
+app.get("/top-discount/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT MAX(discountPercent) AS top_discount
+        FROM discountedProduct
+        WHERE shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching top discount:", err);
+            res.status(500).json({ message: "Error fetching top discount" });
+            return;
+        }
+        res.json({ top_discount: results[0].top_discount });
+    });
+});
+
+// Fetch total messages for a shop
+app.get("/total-messages/:shopId", (req, res) => {
+    const { shopId } = req.params;
+    const query = `
+        SELECT COUNT(*) AS total_messages
+        FROM messages
+        WHERE shop_id = ?
+    `;
+    db.query(query, [shopId], (err, results) => {
+        if (err) {
+            console.error("Error fetching total messages:", err);
+            res.status(500).json({ message: "Error fetching total messages" });
+            return;
+        }
+        res.json({ total_messages: results[0].total_messages });
+    });
+});
+
+
 
 //// Payment History of Seller by Shop ID
 
@@ -1866,25 +1996,6 @@ app.delete("/clearCart/:customerId", (req, res) => {
     });
 });
 
-// DUE PAYMENT PAGE
-// // Fetch due payments for a specific customer
-// app.get("/customer/:customerId/due-payments", (req, res) => {
-//     const { customerId } = req.params;
-//     const query = `
-//         SELECT dp.due_id, s.shop_name, dp.due_date, dp.payment_status, dp.Amount, dp.partial_payment_amount, dp.payment_reason
-//         FROM due_payment dp
-//         JOIN shops s ON dp.shop_id = s.shop_id
-//         WHERE dp.customer_id = ?
-//     `;
-//     db.query(query, [customerId], (err, results) => {
-//         if (err) {
-//             console.error("Error fetching due payments:", err);
-//             return res.status(500).json({ error: "Database query error" });
-//         }
-//         res.json(results);
-//     });
-// });
-// Fetch due payments for a customer
 app.get("/customer/:customerID/due-payments", (req, res) => {
     const customerID = req.params.customerID;
     const query = `
