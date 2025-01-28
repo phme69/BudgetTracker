@@ -275,14 +275,14 @@ const SellerNavBar = () => {
         <nav className="bg-[#79D7BE] text-gray-800 p-4 shadow-lg border-b-4 border-gray-300">
             <div className="container mx-auto flex justify-between items-center">
                 <div className="flex items-center space-x-8">
-                    <h1 className="text-2xl font-extrabold text-gray-900">
+                    <h1 className="text-3xl font-extrabold text-gray-900">
                         Budget Tracker
                     </h1>
                     <div className="flex space-x-6">
                         <Link
                             to="/seller-home"
                             onClick={handleHomeClick}
-                            className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
+                            className="text-gray-800 text-xl hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
                             Home
                         </Link>
                         {["Profile", "About", "Contact"].map(
@@ -290,21 +290,21 @@ const SellerNavBar = () => {
                                 <Link
                                     key={index}
                                     to={`/seller-${item.toLowerCase()}`}
-                                    className="text-gray-800 hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
+                                    className="text-gray-800 text-xl hover:text-white transition duration-300 transform hover:scale-105 hover:underline decoration-wavy underline-offset-4">
                                     {item}
                                 </Link>
                             )
                         )}
                     </div>
                 </div>
-                <div className="relative" ref={dropdownRef}>
+                <div className="relative justify-end" ref={dropdownRef}>
                     <img
                         src={
                             seller.seller_image ||
                             "/path/to/default-profile-image.jpg"
                         }
                         alt="Profile"
-                        className="w-12 h-12 rounded-full cursor-pointer"
+                        className="w-14 h-14 rounded-full cursor-pointer justify-end"
                         onClick={handleProfileClick}
                     />
                     {showDropdown && <SellerProfileHover seller={seller} />}

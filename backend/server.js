@@ -641,7 +641,6 @@ app.get("/categories", (req, res) => {
     });
 });
 
-
 app.get("/discounted-products", (req, res) => {
     const query = `
         SELECT dp.discount_id, dp.discountPercent, p.product_id, p.title, p.image_url
@@ -1178,7 +1177,7 @@ app.get("/total-sales/:shopId", (req, res) => {
     const query = `
         SELECT SUM(Amount) AS total_sales
         FROM due_payment
-        WHERE shop_id = ? AND payment_status = 'paid'
+        WHERE shop_id = ?
     `;
     db.query(query, [shopId], (err, results) => {
         if (err) {
@@ -1311,8 +1310,6 @@ app.get("/total-messages/:shopId", (req, res) => {
         res.json({ total_messages: results[0].total_messages });
     });
 });
-
-
 
 //// Payment History of Seller by Shop ID
 
@@ -1584,22 +1581,6 @@ app.get("/shop-products-by-id/:product_id", (req, res) => {
     });
 });
 
-// Fetch all products for dropdown
-// app.get("/shop-products-update", (req, res) => {
-//     const query = `
-//         SELECT DISTINCT p.product_id, p.title 
-//         FROM Products p 
-//         JOIN shop_products sp ON p.product_id = sp.product_id`;
-//     db.query(query, (err, results) => {
-//         if (err) {
-//             console.error("Error fetching products:", err);
-//             return res.status(500).json({ error: "Database query error" });
-//         }
-//         res.json(results);
-//     });
-// });
-
-// Fetch products for a specific shop
 app.get("/shop-products-update", (req, res) => {
     const { shop_id } = req.query;
     const query = `
@@ -1616,8 +1597,6 @@ app.get("/shop-products-update", (req, res) => {
         res.json(results);
     });
 });
-
-// Update product details
 app.put("/products/:product_id", upload.single("image"), (req, res) => {
     const { product_id } = req.params;
     const {
@@ -1650,49 +1629,143 @@ app.put("/products/:product_id", upload.single("image"), (req, res) => {
 
         const updateQuery = `
             UPDATE Products 
-            SET category_id = ?, title = ?, price = ?, brand = ?, max_discountable_price = ?, description = ?, image_url = ?
+            SET category_id = ?, title = ?, price = ?, brand = ?, max_discountable_price = ?, description = ?
+            ${image_url ? ", image_url = ?" : ""}
             WHERE product_id = ?`;
-        db.query(
-            updateQuery,
-            [
-                category_id,
-                title,
-                price,
-                brand,
-                max_discountable_price,
-                description,
-                image_url,
-                product_id,
-            ],
-            (err, results) => {
-                if (err) {
-                    console.error("Error updating product:", err);
-                    return res
-                        .status(500)
-                        .json({ error: "Database query error" });
-                }
+        const queryParams = [
+            category_id,
+            title,
+            price,
+            brand,
+            max_discountable_price,
+            description,
+        ];
+        if (image_url) {
+            queryParams.push(image_url);
+        }
+        queryParams.push(product_id);
 
-                const updateStockQuery = `
-                    UPDATE shop_products 
-                    SET stock = ? 
-                    WHERE shop_id = ? AND product_id = ?`;
-                db.query(
-                    updateStockQuery,
-                    [stock, shop_id, product_id],
-                    (err, results) => {
-                        if (err) {
-                            console.error("Error updating product stock:", err);
-                            return res
-                                .status(500)
-                                .json({ error: "Database query error" });
-                        }
-                        res.json({ message: "Product updated successfully!" });
-                    }
-                );
+        db.query(updateQuery, queryParams, (err, results) => {
+            if (err) {
+                console.error("Error updating product:", err);
+                return res.status(500).json({ error: "Database query error" });
             }
-        );
+
+            const updateStockQuery = `
+                UPDATE shop_products 
+                SET stock = ? 
+                WHERE shop_id = ? AND product_id = ?`;
+            db.query(
+                updateStockQuery,
+                [stock, shop_id, product_id],
+                (err, results) => {
+                    if (err) {
+                        console.error("Error updating product stock:", err);
+                        return res
+                            .status(500)
+                            .json({ error: "Database query error" });
+                    }
+                    res.json({ message: "Product updated successfully!" });
+                }
+            );
+        });
     });
 });
+
+// // Fetch products for a specific shop
+// app.get("/shop-products-update", (req, res) => {
+//     const { shop_id } = req.query;
+//     const query = `
+//         SELECT DISTINCT p.product_id, p.title
+//         FROM Products p
+//         JOIN shop_products sp ON p.product_id = sp.product_id
+//         WHERE sp.shop_id = ?
+//     `;
+//     db.query(query, [shop_id], (err, results) => {
+//         if (err) {
+//             console.error("Error fetching products:", err);
+//             return res.status(500).json({ error: "Database query error" });
+//         }
+//         res.json(results);
+//     });
+// });
+
+// // Update product details
+// app.put("/products/:product_id", upload.single("image"), (req, res) => {
+//     const { product_id } = req.params;
+//     const {
+//         category_id,
+//         title,
+//         price,
+//         brand,
+//         max_discountable_price,
+//         description,
+//         stock,
+//         shop_id,
+//     } = req.body;
+
+//     const query =
+//         "SELECT category_name FROM product_category WHERE category_id = ?";
+//     db.query(query, [category_id], (err, results) => {
+//         if (err || results.length === 0) {
+//             console.error("Error fetching category name:", err);
+//             return res.status(400).json({ error: "Invalid category ID" });
+//         }
+//         const categoryName = results[0].category_name;
+//         const image_url = req.file
+//             ? path.join(
+//                   "projectimages",
+//                   "products",
+//                   categoryName.charAt(0).toUpperCase() + categoryName.slice(1),
+//                   req.file.filename
+//               )
+//             : null;
+
+//         const updateQuery = `
+//             UPDATE Products
+//             SET category_id = ?, title = ?, price = ?, brand = ?, max_discountable_price = ?, description = ?, image_url = ?
+//             WHERE product_id = ?`;
+//         db.query(
+//             updateQuery,
+//             [
+//                 category_id,
+//                 title,
+//                 price,
+//                 brand,
+//                 max_discountable_price,
+//                 description,
+//                 image_url,
+//                 product_id,
+//             ],
+//             (err, results) => {
+//                 if (err) {
+//                     console.error("Error updating product:", err);
+//                     return res
+//                         .status(500)
+//                         .json({ error: "Database query error" });
+//                 }
+
+//                 const updateStockQuery = `
+//                     UPDATE shop_products
+//                     SET stock = ?
+//                     WHERE shop_id = ? AND product_id = ?`;
+//                 db.query(
+//                     updateStockQuery,
+//                     [stock, shop_id, product_id],
+//                     (err, results) => {
+//                         if (err) {
+//                             console.error("Error updating product stock:", err);
+//                             return res
+//                                 .status(500)
+//                                 .json({ error: "Database query error" });
+//                         }
+//                         res.json({ message: "Product updated successfully!" });
+//                     }
+//                 );
+//             }
+//         );
+//     });
+// });
 
 /// -------------------------------------------------
 

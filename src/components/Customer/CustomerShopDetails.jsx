@@ -109,7 +109,7 @@ const CustomerShopDetails = () => {
                                 <img
                                     src={product.image_url}
                                     alt={product.title}
-                                    className="w-full h-32 object-cover"
+                                    className="w-full h-72 object-cover"
                                 />
                                 <div className="p-4">
                                     <h3 className="text-lg font-bold">
